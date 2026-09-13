@@ -1,8 +1,9 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, DateTime
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+from datetime import datetime
 
 load_dotenv()
 
@@ -20,4 +21,7 @@ SessionLocal = sessionmaker(
 )
 
 class Base(DeclarativeBase):
+    type_annotation_map = {
+        datetime: DateTime(timezone=True)
+    }
     pass

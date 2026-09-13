@@ -5,6 +5,11 @@ backend/.coverage
 
 .env
 backend/.env
+.env
+backend/.env
+backend/.venv/
+__pycache__/
+*.pyc
 frontend/.env
 
 frontend/node_modules/

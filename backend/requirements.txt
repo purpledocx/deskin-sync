@@ -24,6 +24,7 @@ pydantic-settings==2.15.0
 pydantic_core==2.46.5
 Pygments==2.21.0
 pytest==9.1.1
+pytest-dotenv==0.5.2
 python-dotenv==1.2.3
 PyYAML==6.0.3
 SQLAlchemy==2.0.52

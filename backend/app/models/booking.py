@@ -20,4 +20,4 @@ class Booking(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=text("NOW()"))
 
     user: Mapped["User"] = relationship(back_populates="bookings")
-    space: Mapped["Space"] = relationship(back_populates=True)
+    space: Mapped["Space"] = relationship(back_populates="bookings")

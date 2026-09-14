@@ -12,8 +12,10 @@ class Space(Base):
     category_id: Mapped[int] = mapped_column(ForeignKey("space_categories.id"))
 
     is_active: Mapped[bool] = mapped_column(default=True)
+
+    capacity: Mapped[int] = mapped_column(default=1) 
     
-    category: Mapped["SpaceCategory"] = relationship(back_populates="space")
+    category: Mapped["SpaceCategory"] = relationship(back_populates="spaces")
 
     bookings: Mapped[list["Booking"]] = relationship(back_populates="space")
 

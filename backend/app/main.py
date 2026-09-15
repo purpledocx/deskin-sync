@@ -8,6 +8,7 @@ from app.database import engine
 
 
 from app.routers.bookings import router as booking_router
+from app.routers.auth import router as auth_router
 
 """----------------------APP-SETTINGS----------------------"""
 app = FastAPI(
@@ -16,6 +17,7 @@ app = FastAPI(
 )
 
 app.include_router(booking_router)
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,

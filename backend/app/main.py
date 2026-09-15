@@ -6,10 +6,18 @@ from sqlalchemy.exc import  SQLAlchemyError
 
 from app.database import engine
 
+
+from app.routers.bookings import router as booking_router
+from app.routers.auth import router as auth_router
+
+"""----------------------APP-SETTINGS----------------------"""
 app = FastAPI(
     title="DeskIn SmartDesk API",
     version="0.1.0"
 )
+
+app.include_router(booking_router)
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +29,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+"""----------------------ROUTES----------------------"""
 @app.get("/health")
 def health_check():
     return {"status": "ok", "project": "DeskIn SmartDesk"}

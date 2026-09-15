@@ -26,17 +26,19 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return password_context.verify(plain_password, hashed)
+    return password_context.verify(plain, hashed)
 
 
 
 """------------------------------------TOKEN------------------------------------"""
 
-def create_access_token(subject: str) -> str:
+def create_access_token(subject: str, user_id: int, role: str) -> str:
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=access_token_expires)
 
     payload = {
         "sub": subject,
+        "user_id": user_id,
+        "role": role,
         "exp": expires_at
     }
 

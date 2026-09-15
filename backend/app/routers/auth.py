@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -6,9 +7,10 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User
 from app.models.role import Role
-from app.schemas.auth import RegisteredUser, UserRegister
-from app.security import hash_password
+from app.schemas.auth import RegisteredUser, UserRegister, Token
+from app.security import hash_password, create_access_token, verify_password
 from app.database import get_db
+from app.schemas.auth import Token
 
 from typing import Annotated
 
@@ -20,7 +22,7 @@ router = APIRouter(
 )
 
 
-"""--------------------Registers new user in system--------------------"""
+"""--------------------Registers new user endpoint--------------------"""
 
 @router.post(
     "/register",
@@ -75,3 +77,27 @@ def register_user(
         role=student_role.name
     )
 
+
+
+"""--------------------Login endpoint--------------------"""
+
+@router.post("/login", response_model=Token)
+def login( # you MUST write email in OAuth2 "username" in Swagger UI cuz its OAuth2 password flow o_0 
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()], # parses OAuth2 form data instead of JSON to enable the Swagger UI 'Authorize' button
+    db: Annotated[Session, Depends(get_db)]
+):
+
+    # search user by email
+    user = db.scalar(select(User).where(User.email == form_data.username))
+
+    # checking for correct username and password
+    if not user or not verify_password(
+        form_data.password,
+        user.password_hash
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password", headers={"WWW-Authenticate": "Bearer"})
+
+    # creating JWT with user data
+    access_token = create_access_token(subject=user.email, user_id=user.id, role=user.role.name)
+
+    return Token(access_token=access_token, token_type="bearer")

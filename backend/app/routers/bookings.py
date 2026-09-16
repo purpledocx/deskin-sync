@@ -107,8 +107,8 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
 
 
 # GET: Get all bookings (own if Student)
-@router.get("/{booking_id}", response_model=[BookingRead]) #returns list
-def list_bookings(db: Annotated(Session, Depends(get_db)), current_user = Depends(get_current_user)): # Depends(get_current_user) will automatically get user based on JWT
+@router.get("/", response_model=list[BookingRead]) #returns list
+def list_bookings(db: Annotated[Session, Depends(get_db)],current_user: Annotated[User, Depends(get_current_user)]): # Depends(get_current_user) will automatically get user based on JWT
 
     query = db.query(Booking)
 
@@ -118,7 +118,48 @@ def list_bookings(db: Annotated(Session, Depends(get_db)), current_user = Depend
     return query.order_by(Booking.start_at).all()
 
 
-
 # PUT: Modify Booking
 @router.put("/{booking_id}", response_model=BookingRead)
-def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Session, Depends(get_db)])
+def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Session, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]):
+
+
+    # get booking + validation
+    booking = _get_owned_booking(db, booking_id, current_user)
+
+    if booking.status != "active":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Only active bookings can be modified")
+    
+    _editable_window(booking)
+
+
+    # get space + validation
+    space = db.get(Space, payload.space_id)
+
+    if not space:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Space does not exists")
+    if not space.is_active:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Space is not active")
+
+    
+    # data validation
+    try:
+        validate_booking_time(
+            db = db,
+            space_id= payload.space_id,
+            start_at= payload.start_at,
+            end_at= payload.end_at,
+            exclude_booking_id = booking.id
+        )
+    except BookingOverlapError as err:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
+
+    # data modifying
+    booking.space_id = payload.space_id
+    booking.start_at = payload.start_at,
+    booking.end_at = payload.end_at
+
+    # save to db
+    db.commit()
+    db.refresh(booking)
+
+    return booking

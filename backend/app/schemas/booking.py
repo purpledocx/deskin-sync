@@ -40,6 +40,3 @@ class BookingRead(BookingBase):
 class BookingUpdate(BookingBase):
     """booking updating"""
     pass
-
-
-

@@ -39,7 +39,7 @@ def create_access_token(subject: str, user_id: int, role: str) -> str:
         "sub": subject,
         "user_id": user_id,
         "role": role,
-        "exp": expires_at
+        "exp": expires_at.timestamp()
     }
 
     return jwt.encode(payload, jwt_secret_key, algorithm=jwt_algorithm)

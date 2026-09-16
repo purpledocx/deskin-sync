@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent # loadenv couldnt find .env so
 dotenv_path = BASE_DIR / ".env"
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -56,6 +56,14 @@ def db_session():
         bind=connection,
         join_transaction_mode="create_savepoint"
     )
+
+    # pytest test_auth was complaining, added student role for all tests
+    student_role = session.scalar(select(Role).where(Role.name == "Student"))
+    if not student_role:
+        student_role = Role(name="Student")
+        session.add(student_role)
+        session.flush()
+
     yield session
 
     session.close()
@@ -66,10 +74,18 @@ def db_session():
 
 @pytest.fixture
 def seeded_data(db_session):
-    role = Role(name="Student")
+
+    #check if there is student role | added cuz pytest twst_auth was wild
+    student_role = db_session.scalar(select(Role).where(Role.name == "Student"))
+    if not student_role:
+        student_role = Role(name="Student")
+        db_session.add(student_role)
+        db_session.flush()
+    
+    
     category = SpaceCategory(name="Desk")
 
-    db_session.add_all([role, category])
+    db_session.add(category)
     db_session.flush()
 
 
@@ -77,7 +93,7 @@ def seeded_data(db_session):
         name="Test User",
         email="test@test.com",
         password_hash="some-salted-hash",
-        role_id=role.id
+        role_id=student_role.id
     )
     space = Space(
         name="Desk A7",

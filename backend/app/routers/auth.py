@@ -39,7 +39,7 @@ def register_user(
     existing_user = db.scalar(select(User).where(User.email == user_data.email))
 
     if existing_user:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with cuurrent email already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with this email already exists")
    
 
     #  get "Student" role for new user

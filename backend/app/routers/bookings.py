@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.schemas.booking import BookingCreate, BookingRead
 from app. models.user import User
 from app.models.space import Space
+from app.models.booking import Booking
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.services.booking_service import BookingOverlapError, validate_booking_time
@@ -40,9 +41,9 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
 
     booking = Booking(
         user_id = current_user.id,
-        space_id = current_user.space_id,
-        start_at = current_user.start_at,
-        end_at = current_user.end_at,
+        space_id = booking_data.space_id,
+        start_at = booking_data.start_at,
+        end_at = booking_data.end_at,
         status = "active"
     )
 

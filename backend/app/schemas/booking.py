@@ -17,14 +17,14 @@ class BookingBase(BaseModel):
             raise ValueError("Start time needs to be before end time")
         return self
 
-    
+
+
+"""____________________Booking_CRUD_operations____________________""" 
+
 class BookingCreate(BookingBase):
     """new booking"""
     pass
 
-class BookingUpdate(BookingBase):
-    """booking updating"""
-    pass
 
 class BookingRead(BookingBase):
     """full reservation returned from DB"""
@@ -35,3 +35,8 @@ class BookingRead(BookingBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True) #allows read data direct from sqlalchemy
+
+
+class BookingUpdate(BookingBase):
+    """booking updating"""
+    pass

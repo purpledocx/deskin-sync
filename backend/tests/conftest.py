@@ -75,7 +75,7 @@ def db_session():
 @pytest.fixture
 def seeded_data(db_session):
 
-    #check if there is student role | added cuz pytest twst_auth was wild
+    #check if there is student role | added cuz pytest twst_auth was wild | leave it here cuz wihtout it somehow test_auth.py fails o_0
     student_role = db_session.scalar(select(Role).where(Role.name == "Student"))
     if not student_role:
         student_role = Role(name="Student")

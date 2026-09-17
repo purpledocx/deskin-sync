@@ -7,11 +7,13 @@ from datetime import datetime
 class BookingOverlapError(ValueError):
     """Space is already bookoed for the selected time"""
 
+
 def validate_booking_time(
     db: Session,
     space_id: int,
     start_at: datetime,
-    end_at: datetime
+    end_at: datetime,
+    exclude_booking_id: int | None = None
 ) -> None:
     """Check for conflits in acive booking in requested time """
 

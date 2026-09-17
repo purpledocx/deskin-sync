@@ -34,7 +34,7 @@ def _can_view_all(current_user) -> bool:
     return role_name in ("Admin", "Teacher")
 
 
-# Fetched booking ID and verified booking-to-user belongings
+# fetched Booking by ID and verified booking-to-user belongings
 def _get_owned_booking(db: Session, booking_id: int, current_user) -> Booking:
 
     booking = db.query(Booking).filter(Booking.id == booking_id).first()
@@ -89,6 +89,9 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
         )
     except BookingOverlapError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
+
+    if booking_data.start_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime("%H:%M:%S %d-%m-%Y")}")
 
     booking = Booking(
         user_id = current_user.id,
@@ -155,10 +158,33 @@ def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Sessio
 
     # data modifying
     booking.space_id = payload.space_id
-    booking.start_at = payload.start_at,
+    booking.start_at = payload.start_at
     booking.end_at = payload.end_at
 
     # save to db
+    db.commit()
+    db.refresh(booking)
+
+    return booking
+
+
+# DELETE: Cancel Booking
+@router.delete("/{booking_id}", response_model=BookingRead)
+def cancel_booking( booking_id: int, db: Annotated[Session, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]):
+
+
+    booking = _get_owned_booking(db, booking_id, current_user)
+
+
+    if booking.status != "active":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Current booking is already cancelled")
+
+    _editable_window(booking)
+
+
+    booking.status = "cancelled"
+
+
     db.commit()
     db.refresh(booking)
 

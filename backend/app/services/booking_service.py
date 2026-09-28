@@ -26,7 +26,8 @@ def validate_booking_time(
             Booking.space_id == space_id,
             Booking.status == "active",
             Booking.start_at < end_at,
-            Booking.end_at > start_at
+            Booking.end_at > start_at,
+            Booking.id != exclude_booking_id # added cuz found a bug 409 status_code when was coding api_update tests
         )
     )
 

@@ -13,10 +13,7 @@ from sqlalchemy.pool import StaticPool
 
 import app.models
 from app.database import Base
-from app.models.role import Role
-from app.models.space import Space
-from app.models.space_category import SpaceCategory
-from app.models.user import User
+from app.models import Role, Space, SpaceCategory, User
 
 
 test_database_url = os.getenv("TEST_DATABASE_URL")

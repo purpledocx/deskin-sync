@@ -5,12 +5,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.models.user import User
-from app.models.role import Role
-from app.schemas.auth import RegisteredUser, UserRegister, Token
+from app.models import User, Role
+from app.schemas import RegisteredUser, UserRegister, Token
 from app.security import hash_password, create_access_token, verify_password
 from app.database import get_db
-from app.schemas.auth import Token
 
 from typing import Annotated
 

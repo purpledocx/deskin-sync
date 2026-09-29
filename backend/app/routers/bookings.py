@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 
-from app. models.user import User
-from app.models.space import Space
-from app.models.booking import Booking
+from app. models import User, Space, Booking
 
 from app.database import get_db
 from app.dependencies import get_current_user

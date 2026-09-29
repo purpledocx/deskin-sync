@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.models.booking import Booking
+from app.models import Booking
 from datetime import datetime
 
 

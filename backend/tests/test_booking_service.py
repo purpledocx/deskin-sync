@@ -1,7 +1,7 @@
 import pytest
 
-from app.models.booking import Booking
-from app.models.space import Space
+from app.models import Booking, Space
+
 from app.services.booking_service import BookingOverlapError, validate_booking_time
 
 from datetime import datetime, timezone, timedelta

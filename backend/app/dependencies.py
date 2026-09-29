@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models.user import User
+from app.models import User
 from app.security import jwt_secret_key, jwt_algorithm
 
 from jose import jwt, JWTError

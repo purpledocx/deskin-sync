@@ -4,11 +4,14 @@ from app.models.booking import Booking
 from app.models.space import Space
 from app.services.booking_service import BookingOverlapError, validate_booking_time
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
+def _test_day() -> datetime:
+    future = datetime.now(timezone.utc) + timedelta(days=60)
+    return future.replace(hour=0, minute=0, second=0, microsecond=0)
 
 def date_time(hour: int) -> datetime:  # shortened for comfort reusability lol
-    return datetime(2026, 10, 15, hour, 0, tzinfo=timezone.utc)
+    return _test_day() + timedelta(hours=hour)
 
 
 def create_booking(

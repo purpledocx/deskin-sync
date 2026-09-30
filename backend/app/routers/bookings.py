@@ -39,7 +39,7 @@ def _get_owned_booking(db: Session, booking_id: int, current_user) -> Booking:
 
     if booking is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    if booking.user_id != current_user.id:
+    if booking.user_id != current_user.id and not _can_view_all(current_user):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have no access to following booking")
     
     return booking
@@ -89,7 +89,7 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
 
     if booking_data.start_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime("%H:%M:%S %d-%m-%Y")}")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime('%H:%M:%S %d-%m-%Y')}")
 
     booking = Booking(
         user_id = current_user.id,
@@ -159,7 +159,6 @@ def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Sessio
     booking.start_at = payload.start_at
     booking.end_at = payload.end_at
 
-    # save to db
     db.commit()
     db.refresh(booking)
 

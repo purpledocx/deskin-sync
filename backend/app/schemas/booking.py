@@ -1,15 +1,25 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
 
 
-# base model added cuz DRY
+def _ensure_utc(val: datetime) -> datetime:
+    return val.replace(tzinfo=timezone.utc) if val.tzinfo is None else val
+
+# base model cuz DRY
 class BookingBase(BaseModel):
     """overall fields + reservation validation"""
 
     space_id: int = Field(gt=0)
     start_at: datetime
     end_at: datetime
+
+    # fix for comfort timezone wirte in (POST/bookings in /docs) (noo need to write Z, just 2030-01-01T10:00:00)
+    @field_validator("start_at", "end_at")
+    @classmethod
+    def ensure_timezone(cls, val):
+        return _ensure_utc(val)
+
 
     @model_validator(mode="after")
     def check_time_range(self):

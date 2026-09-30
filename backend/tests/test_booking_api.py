@@ -201,6 +201,20 @@ def test_create_booking_overlap(db_session, auth_as, seeded_data):
         "end_at": date_time(12).isoformat()
     })
 
+def test_create_booking_with_naive_datetime_returns_290(db_session, auth_as, client, seeded_data):
+    
+    user = db_session.get(User, seeded_data["user_id"])
+    client = auth_as(user)
+    start = (datetime.now() + timedelta(days=60)).replace(minute=0, second=0, microsecond=0)
+
+    response = client.post("/bookings/", json={
+        "space_id": seeded_data["space_id"],
+        "start_at": start.isoformat(),
+        "end_at": (start + timedelta(hours=1)).isoformat()
+    })
+
+    assert response.status_code == 201
+
 
 
 
@@ -366,3 +380,35 @@ def test_cancel_booking_not_found(db_session, auth_as, seeded_data):
     response = client.delete(f"/bookings/999999")
 
     assert response.status_code == 404
+
+
+
+def test_teacher_can_cancell_other_users_booking(db_session, auth_as, seeded_data):
+
+    start = (datetime.now() + timedelta(days=60)).replace(minute=0, second=0, microsecond=0)
+    booking = Booking(
+        user_id = seeded_data["user_id"],
+        space_id = seeded_data["space_id"],
+        start_at = start,
+        end_at = start + timedelta(hours=1),
+        status = "active"
+    )
+
+    teacher_role = Role(name="Teacher")
+    db_session.add_all([booking, teacher_role])
+    db_session.flush()
+
+    teacher = User(
+        name="Teacher",
+        email="teacher@test.com",
+        password_hash="super-salted-hash",
+        role_id=teacher_role.id
+    )
+    db_session.add(teacher)
+    db_session.flush()
+    
+    client = auth_as(teacher)
+    response = client.delete(f"/bookings/{booking.id}")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "cancelled"

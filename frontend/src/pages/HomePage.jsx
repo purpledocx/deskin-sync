@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getHealth } from '../api/client';
-
+ 
 function HomePage() {
   const [apiStatus, setApiStatus] = useState('Cheking API...');
 
@@ -12,7 +12,7 @@ function HomePage() {
 
   return (
     <main>
-      <h1>DeskIn Sync</h1>
+      <h1 className="bg-blue-600">DeskIn Sync</h1>
       <p>Book workspaces and meeting rooms.</p>
       <p>{apiStatus}</p>
     </main>

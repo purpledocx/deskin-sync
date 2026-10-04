@@ -3,6 +3,8 @@ import Hero from "../components/marketing/Hero"
 import Stack from "../components/marketing/Stack";
 import Features from "../components/marketing/Features";
 import HowItWorks from "../components/marketing/HowItWorks";
+import Pricing from "../components/marketing/Pricing"
+
 
 export default function HomePage() {
     return(
@@ -12,6 +14,7 @@ export default function HomePage() {
         <Stack />
         <Features />
         <HowItWorks />
+        <Pricing />
         </>
     )
 }

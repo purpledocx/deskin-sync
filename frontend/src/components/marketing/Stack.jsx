@@ -1,19 +1,19 @@
 const stack = [
   {
     name: "FastAPI",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg",
+    logo: "/fastapi-original.svg",
   },
   {
     name: "React",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
+    logo: "/react-original.svg",
   },
   {
     name: "PostgreSQL",
-    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
+    logo: "/postgresql-original.svg",
   },
   {
     name: "JWT auth",
-    logo: "https://jwt.io/img/icon.svg",
+    logo: "/jwt-icon.svg",
   },
 ];
 

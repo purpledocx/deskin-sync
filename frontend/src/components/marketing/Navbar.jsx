@@ -1,25 +1,45 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
+
+const links = [
+    ["Features", "#features"],
+    ["How it works?", "#how-it-work"],
+    ["Pricing", "#pricing"]
+]
+
 export default function Navbar() {
+
+    const [open, setOpen] = useState(false);
+    const close = () => setOpen(false);
+
+
     return (
-        <header className="border-b border-line bg-white" >
-            <div className="mx-auto flex h-18 max-w-6xl  items-center justify-between px-6">
+        <header className="sticky bg-white top-0 border-b border-line z-50">
+            <div className="flex max-w-6xl items-center justify-between px-4 sm:px-6 md:h-18 mx-auto">
+                
+                <Link to="/" className="text-navy font-semibold text-xl">DeskIn Sync</Link>
 
-                <Link to="/" className="text-xl font-semibold text-navy">DeskIn Sync</Link>
-
-                <nav className="hidden gap-8 text-ink md:flex">
-                    <a href="#functions">Functions</a>
-                    <a href="#how-it-work">How does it work?</a>
-                    <a href="#pricing">Pricing</a>
+                <nav className="hidden text-ink gap-8 md:flex">
+                    {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
                 </nav>
 
-                <div className="flex gap-5 items-center">
-                    <Link to="/register?method=login" className="text-ink">Login</Link>
-                    <Link to="/register" className="rounded-md text-white bg-navy px-5 py-2.5 hover:bg-steel transition-colors duration-200 ease-in-out">Dive in Demo-mode</Link>
-                </div>
+                <div className="flex items-center gap-3 sm:gap-5">
+                    <Link to="/register?mode=login" className="  text-ink sm:inline">Log in</Link>
+                    <Link to="/register" className="text-white bg-navy rounded-md text-sm font-medium px-4 py-2 hover:bg-steel sm:px-5 sm:py-2.5 sm:text-base transition-colors duration-200 ease-in-out">See demo</Link>
 
+                    <button className="text-2xl md:hidden" aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "✕" : "☰"}</button>
+                </div>
             </div>
 
+                  <nav className={`flex flex-col border-t border-line px-4 gap-4 md:hidden transition-all duration-300 ease-in-out overflow-hidden ${open ? "max-h-60 py-4 opacity-100" : "max-h-0 py-0 opacity-0 pointer-events-none"}`}>
+
+                    {links.map(([label, href]) => (
+                        <a href={href} key={href} onClick={close}>{label}</a>
+                    ))}
+                    
+                    <Link to="/regiter?mode=login" onClick={close}>Log in</Link>
+                    </nav>
         </header>
     )
 }

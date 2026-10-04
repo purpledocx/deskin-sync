@@ -8,7 +8,7 @@ function App() {
   return (
     <Routes>
       <Route path='/' element={<LandingPage />} />
-      <Route path='/register?method=login' element={<Stub name="Inloggen" />} />
+      <Route path='/register?mode=login' element={<Stub name="Inloggen" />} />
       <Route path='/register' element={<Stub name="Register" />} />
       <Route path='/dashboard' element={<Stub name="Dashboard" />} />
     </Routes>

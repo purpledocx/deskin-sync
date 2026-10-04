@@ -1,6 +1,7 @@
 import Navbar from "../components/marketing/Navbar";
 import Hero from "../components/marketing/Hero"
 import Stack from "../components/marketing/Stack";
+import Features from "../components/marketing/Features";
 
 export default function LandingPage() {
     return(
@@ -8,6 +9,7 @@ export default function LandingPage() {
         <Navbar />
         <Hero />
         <Stack />
+        <Features />
         </>
     )
 }

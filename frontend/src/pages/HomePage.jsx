@@ -4,7 +4,8 @@ import Stack from "../components/marketing/Stack";
 import Features from "../components/marketing/Features";
 import HowItWorks from "../components/marketing/HowItWorks";
 import Pricing from "../components/marketing/Pricing"
-
+import Cta from "../components/marketing/Cta";
+import Footer from "../components/marketing/Footer";
 
 export default function HomePage() {
     return(
@@ -15,6 +16,8 @@ export default function HomePage() {
         <Features />
         <HowItWorks />
         <Pricing />
+        <Cta />
+        <Footer />
         </>
     )
 }

@@ -6,7 +6,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-work" className="bg-white py-20">
+    <section id="how-it-work" className="bg-white py-20 scroll-mt-20">
       
       <div className="mx-auto px-6 max-w-6xl">
         

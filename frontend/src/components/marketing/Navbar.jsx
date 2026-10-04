@@ -21,7 +21,7 @@ export default function Navbar() {
                 <Link to="/" className="text-navy font-semibold text-xl">DeskIn Sync</Link>
 
                 <nav className="hidden text-ink gap-8 md:flex">
-                    {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+                    {links.map(([label, href]) => <a key={href} href={href} className="transition-colors duration-200 hover:text-navy">{label}</a>)}
                 </nav>
 
                 <div className="flex items-center gap-3 sm:gap-5">
@@ -32,13 +32,15 @@ export default function Navbar() {
                 </div>
             </div>
 
-                  <nav className={`flex flex-col border-t border-line px-4 gap-4 md:hidden transition-all duration-300 ease-in-out overflow-hidden ${open ? "max-h-60 py-4 opacity-100" : "max-h-0 py-0 opacity-0 pointer-events-none"}`}>
+                  <nav className={` flex flex-col gap-4 overflow-hidden border-t border-line px-4 transition-[max-height,opacity,padding] duration-300 ease-in-out
+                                    md:hidden ${open ? "max-h-60 py-4 opacity-100" : "max-h-0 py-0 opacity-0"}`}>
 
                     {links.map(([label, href]) => (
                         <a href={href} key={href} onClick={close}>{label}</a>
                     ))}
                     
-                    <Link to="/regiter?mode=login" onClick={close}>Log in</Link>
+                    <Link to="/register?mode=login" onClick={close}>Log in</Link>
+                    
                     </nav>
         </header>
     )

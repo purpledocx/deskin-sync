@@ -29,7 +29,7 @@ router = APIRouter(
 )
 def register_user(
     user_data: UserRegister,
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Sesssion, Depends(get_db)]
     ) -> RegisteredUser:
 
     # check wheter user is already registered

@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import AuthPage from './pages/AuthPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 const Stub = ({ name }) => <div className='p-10 text-xl'>{name} (komt later)</div>;
@@ -9,8 +11,8 @@ function App() {
     <Routes>
       <Route path='/' element={<HomePage />} />
       <Route path='/register?mode=login' element={<Stub name="Inloggen" />} />
-      <Route path='/register' element={<Stub name="Register" />} />
-      <Route path='/dashboard' element={<Stub name="Dashboard" />} />
+      <Route path='/register' element={< AuthPage />} />
+      <Route path="/app" element={<ProtectedRoute><Stub name="Dashboard" /></ProtectedRoute>} />
     </Routes>
   );
 }

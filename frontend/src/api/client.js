@@ -4,6 +4,25 @@ export const getToken = () => localStorage.getItem("token");
 export const setToken = (t) => localStorage.setItem("token", t);
 export const clearToken = () => localStorage.removeItem("token");
 
+const FIELD_LABELS = { name: "Name", email: "Email", password: "Password" };
+
+function formatDetail(detail) {
+  if (!Array.isArray(detail)) return typeof detail === "string" ? detail : null;
+
+  return detail
+    .map((d) => {
+      const field = d.loc?.[d.loc.length - 1];
+      const label = FIELD_LABELS[field] ?? field;
+
+      let text = d.msg;
+      if (d.type === "string_too_short") text = `must be at least ${d.ctx?.min_length} characters`;
+      if (d.type === "string_too_long") text = `must be at most ${d.ctx?.max_length} characters`;
+
+      return label ? `${label} ${text}` : text;
+    })
+    .join(". ");
+}
+
 export async function request(path, { method = "GET", body, form } = {}) {
   const headers = {};
   const token = getToken();
@@ -35,10 +54,7 @@ export async function request(path, { method = "GET", body, form } = {}) {
   const data = res.status === 204 ? null : await res.json().catch(() => null);
 
   if (!res.ok) {
-    const detail = Array.isArray(data?.detail)
-      ? data.detail.map((d) => d.msg).join(". ")
-      : data?.detail;
-    const err = new Error(typeof detail === "string" ? detail : "Request failed");
+    const err = new Error(formatDetail(data?.detail) ?? "Request failed");
     err.status = res.status;
     throw err;
   }

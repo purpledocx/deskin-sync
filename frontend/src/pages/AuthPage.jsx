@@ -18,6 +18,19 @@ export default function AuthPage() {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (mode === "register") {
+      const name = form.name.trim();
+      if (name.length < 2 || name.length > 100)
+        return setError("Name must be between 2 and 100 characters.");
+      if (!/^\S+@\S+\.\S+$/.test(form.email)) // regex validation
+        return setError("Enter a valid email address.");
+      if (form.password.length < 8)
+        return setError("Password must be at least 8 characters.");
+      if (form.password.length > 72)
+        return setError("Password must be at most 72 characters.");
+    }
+
     setLoading(true);
     try {
       if (mode === "register") await register(form);
@@ -63,7 +76,11 @@ export default function AuthPage() {
       </div>
 
       <div className="flex items-center justify-center p-6">
-        <form onSubmit={submit} className="flex w-full max-w-md flex-col gap-5 rounded-xl border border-line bg-white p-8 shadow-sm">
+        <form
+          onSubmit={submit}
+          noValidate
+          className="flex w-full max-w-md flex-col gap-5 rounded-xl border border-line bg-white p-8 shadow-sm"
+        >
           <div className="flex border-b border-line">
             {tab("login", "Log in")}
             {tab("register", "Sign up")}

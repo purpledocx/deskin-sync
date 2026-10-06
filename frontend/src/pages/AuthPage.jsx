@@ -1,0 +1,101 @@
+import { useState } from "react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { register, login } from "../api/auth";
+
+const input =
+  "h-11 w-full rounded-md border border-line px-3 outline-none focus:border-navy focus:ring-2 focus:ring-navy/20";
+
+export default function AuthPage() {
+  const [params, setParams] = useSearchParams();
+  const mode = params.get("mode") === "login" ? "login" : "register";
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      if (mode === "register") await register(form);
+      await login(form.email, form.password);
+      navigate("/app");
+    } catch (err) {
+      setError(
+        err.status === 409
+          ? "This email is already in use."
+          : err.status === 401
+          ? "Email or password is incorrect. Please try again."
+          : err.status === 422
+          ? err.message
+          : err.status === 0
+          ? "Server is unreachable. Try again later."
+          : "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const tab = (m, label) => (
+    <button
+      type="button"
+      onClick={() => {
+        setError("");
+        setParams(m === "login" ? { mode: "login" } : {});
+      }}
+      className={`flex-1 border-b-2 py-3 ${
+        mode === m ? "border-navy font-semibold text-navy" : "border-transparent text-ink/60"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="grid min-h-screen md:grid-cols-2">
+      <div className="hidden flex-col items-center justify-center gap-6 bg-surface md:flex">
+        <Link to="/" className="text-3xl font-semibold text-navy">DeskIn Sync</Link>
+        <div className="text-ink/60">[workspace screenshot]</div>
+      </div>
+
+      <div className="flex items-center justify-center p-6">
+        <form onSubmit={submit} className="flex w-full max-w-md flex-col gap-5 rounded-xl border border-line bg-white p-8 shadow-sm">
+          <div className="flex border-b border-line">
+            {tab("login", "Log in")}
+            {tab("register", "Sign up")}
+          </div>
+
+          <h1 className="text-2xl font-semibold text-navy">
+            {mode === "login" ? "Welcome back to DeskIn Sync" : "Create your account"}
+          </h1>
+
+          {mode === "register" && (
+            <label className="flex flex-col gap-1 text-sm font-medium">
+              Name
+              <input className={input} value={form.name} onChange={set("name")} required />
+            </label>
+          )}
+          <label className="flex flex-col gap-1 text-sm font-medium">
+            Email address
+            <input type="email" className={input} placeholder="richard@piedpiper.com" value={form.email} onChange={set("email")} required />
+          </label>
+          <label className="flex flex-col gap-1 text-sm font-medium">
+            Password
+            <input type="password" className={input} value={form.password} onChange={set("password")} required />
+          </label>
+
+          {mode === "register" && <p className="text-sm text-ink/60">Your role will be set to Student automatically.</p>}
+          {error && <div className="rounded-md border border-bad px-3 py-2 text-sm text-bad">{error}</div>}
+
+          <button disabled={loading} className="h-11 rounded-md bg-navy font-medium text-white hover:bg-steel disabled:opacity-60">
+            {loading ? "Authenticating…" : mode === "login" ? "Log in" : "Sign up"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

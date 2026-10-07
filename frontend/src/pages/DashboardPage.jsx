@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { clearToken } from "../api/client"
 import { useEffect, useState } from "react"
 import { getAvailability } from "../api/spaces"
+import BookingModal from "../components/modals/BookingModal"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 
@@ -16,6 +17,10 @@ const pad = (n) => String(n).padStart(2,"0")
 
 // date object to YYYY-MM-DD-THH:mm for html datetime input
 const toLocalInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+const formatDT = (iso) => {
+    const d = new Date(iso)
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 
 function defaultRange(){
@@ -50,6 +55,11 @@ export default function DashboardPage() {
     
     const [error, setError] = useState("")
 
+    // BookinModal states
+    const [booking, setBooking] = useState(null)
+    const [refresh, setRefresh] = useState(0) 
+    const [notice, setNotice] = useState("")
+
 
     useEffect(() => {
         if (invalid) return;
@@ -66,7 +76,7 @@ export default function DashboardPage() {
         return () => {
             ignore = true
         }
-    }, [start, end, invalid]) //rerun whenever start, end or validity changes
+    }, [start, end, invalid, refresh]) //rerun whenever start, end or validity changes
 
     
 
@@ -78,7 +88,7 @@ export default function DashboardPage() {
                 <button onClick={logout} className="text-2xl rounded-md bg-gray-100 text-gray-900 border border-gray-300 hover:bg-navy hover:text-white transition-colors duration-200 ease-in-out">Log out</button>
             </header>
 
-            <main className="max-w-6xl p-6">
+            <main className="max-w-6xl mx-auto p-6">
                 <h1 className="text-4xl text-navy font-semibold mb-4">Space availability</h1>
 
 
@@ -113,11 +123,11 @@ export default function DashboardPage() {
                 </div>
 
                 {invalid && (
-                    <div className="border border-bad text-bad rounded-md text-sm px-3 py-2">Start time must be earlier that end time!</div>
+                    <div className="border border-bad text-bad rounded-md px-3 py-2 mb-2 text-xl">Start time must be earlier than end time!</div>
                 )}
 
-                {error && invalid && (
-                    <div className="border border-bad text-bad rounded-md text-sm px-3 py-2">{error}</div>
+                {error && !invalid && (
+                    <div className="border border-bad text-bad rounded-md px-3 py-2 mb-2 text-xl">{error}</div>
                 )}
 
 
@@ -125,9 +135,14 @@ export default function DashboardPage() {
                 {!invalid && spaces?.length === 0 && <p className="text-ink/60">No spaces found...</p>}
 
 
+                {notice && (
+                    <div className=" bg-green-50 border border-green-600 text-green-600 text-sm rounded-md px-3 py-2 mb-4">{notice}</div>
+                )}
+
+
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {spaces?.map((s) => (
-                        <div key={s.id} className="bg-white  border-2 rounded-xl p-5">
+                        <div key={s.id} className={`bg-white border-2 rounded-xl p-5 ${s.is_available ? "border-green-600" : "border-red-600"}`}>
                             <div className="flex  items-start justify-between gap-2">
                                 <h2 className="text-navy font-semibold">{s.name}</h2>
                                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.is_available ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
@@ -140,10 +155,44 @@ export default function DashboardPage() {
                             {s.facilities.length > 0 && (
                                 <p className="mt-3 text-sm">{s.facilities.join(", ")}</p>
                             )}
+
+                            <div className="mt-auto pt-4">
+                            {s.is_available ? (
+                                <button
+                                    onClick={() => { setNotice(""); setBooking(s) }}
+                                    className="text-white bg-navy font-medium rounded-md w-full h-10 border hover:bg-surface hover:text-navy transition-colors duration-200 ease-in-out"
+                                >
+                                    Book
+                                </button>
+                            ) : (
+                                s.available_from && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm text-red-600">Free from {formatDT(s.available_from)}</p>
+                                        <button
+                                            onClick={() => {
+                                                const from = new Date(s.available_from)
+                                                setRange([toLocalInput(from), toLocalInput(new Date(from.getTime() + 60 * 60 * 1000))])
+                                            }}
+                                            className="text-sm font-medium text-navy underline"
+                                        >
+                                            Show then
+                                        </button>
+                                    </div>
+                                )
+                            )}
                         </div>
+                </div>
                     ))}
                 </div>
             </main>
-        </div>
+
+            {booking && (
+            <BookingModal space={booking} start={start} end={end} onClose={() => setBooking(null)} onBooked={(name) => {
+                setBooking(null)
+                setNotice(`${name} booked successfully!`)
+                setRefresh((n) => n + 1)
+            }} />
+        )}
+    </div>
     )
 }

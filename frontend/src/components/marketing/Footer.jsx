@@ -24,7 +24,7 @@ export default function Footer() {
                 
             </div>
             
-            <div className="text-center text-xs text-gray-400 bg-black/30 py-3">2026 DeskIn Sync - github.com/purpledocx</div>
+            <div className="text-center text-xs text-gray-400 bg-black/30 py-3">2026 DeskIn Sync - <a href="https://github.com/purpledocx" className="hover:underline">github.com/purpledocx</a></div>
         </footer>
     )
 }

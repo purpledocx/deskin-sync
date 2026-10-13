@@ -182,3 +182,34 @@ def test_missing_query_params_returns_422(client):
     response = client.get("/spaces/availability")
 
     assert response.status_code == 422
+
+
+
+def test_space_bookings_returns_only_active_in_window_without_user_data(client, db_session, seeded_data):
+    uid, sid = seeded_data["user_id"], seeded_data["space_id"]
+    a_start, a_end = _slot(0, 2)
+    _add_booking(db_session, uid, sid, a_start, a_end)                      # active, inside window
+    c_start, c_end = _slot(3, 1)
+    _add_booking(db_session, uid, sid, c_start, c_end, status="cancelled")  # cancelled
+    o_start, o_end = _slot(20, 1)
+    _add_booking(db_session, uid, sid, o_start, o_end)                      # outside window
+
+    w_start, _ = _slot(-1)
+    _, w_end = _slot(8)
+    response = client.get(f"/spaces/{sid}/bookings", params={"start_at": w_start.isoformat(), "end_at": w_end.isoformat()})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert set(response.json()[0].keys()) == {"start_at", "end_at"}
+
+
+def test_space_bookings_unknown_space_404(client):
+    start, end = _slot()
+    response = client.get("/spaces/999999/bookings", params={"start_at": start.isoformat(), "end_at": end.isoformat()})
+    assert response.status_code == 404
+
+
+def test_space_bookings_invalid_range_400(client, seeded_data):
+    start, end = _slot()
+    response = client.get(f"/spaces/{seeded_data['space_id']}/bookings", params={"start_at": end.isoformat(), "end_at": start.isoformat()})
+    assert response.status_code == 400

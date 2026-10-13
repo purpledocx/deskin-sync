@@ -201,7 +201,9 @@ def test_create_booking_overlap(db_session, auth_as, seeded_data):
         "end_at": date_time(12).isoformat()
     })
 
-def test_create_booking_with_naive_datetime_returns_290(db_session, auth_as, client, seeded_data):
+    assert response.status_code == 409
+
+def test_create_booking_with_naive_datetime_returns_201(db_session, auth_as, client, seeded_data):
     
     user = db_session.get(User, seeded_data["user_id"])
     client = auth_as(user)

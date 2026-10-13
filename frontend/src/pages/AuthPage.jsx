@@ -71,7 +71,7 @@ export default function AuthPage() {
         <Link to="/" className="text-3xl font-semibold text-navy">DeskIn Sync</Link>
         <div className="flex items-center justify-center">
           <img 
-              src={"../../dist/Workspace.png"} 
+              src={"../../Workspace.jpg"} 
               alt="DeskIn Sync Workspace Screenshot" 
               className="w-full h-auto rounded-xl shadow-xl border border-line/50 object-cover"
           />

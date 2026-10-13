@@ -48,3 +48,16 @@ def get_spaces_availability( db: Session, start_at: datetime, end_at: datetime) 
         }
         for space in spaces
     ]
+
+
+def get_space_bookings(db: Session, space_id: int, start_at: datetime, end_at: datetime) -> list[Booking]:
+    return list(db.scalars(
+        select(Booking)
+        .where(
+            Booking.space_id == space_id,
+            Booking.status == "active",
+            Booking.start_at < end_at,
+            Booking.end_at > start_at,
+        )
+        .order_by(Booking.start_at)
+    ))

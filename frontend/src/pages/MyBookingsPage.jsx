@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { getBookings, cancelBooking } from "../api/bookings";
 import { getUser, canViewAll } from "../api/session";
 import { parseApiDate, formatDateTime } from "../api/dates";
+import { getAvailability } from "../api/spaces";
 import ConfirmCancelModal from "../components/modals/ConfirmCancelModal";
 import EditBookingModal from "../components/modals/EditBookingModal";
+import SpaceDetailsModal from "../components/modals/SpaceDetailsModal";
 
 const MIN_BEFORE_CHANGE = 30 * 60 * 1000; // same rule as backend
 const LOCK_HINT = "Changes and cancellations are not possible within 30 minutes of the start.";
@@ -36,6 +38,8 @@ export default function MyBookingsPage() {
 
   // edit modal state
   const [toEdit, setToEdit] = useState(null);
+
+  const [details, setDetails] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -122,9 +126,10 @@ export default function MyBookingsPage() {
 
       {rows?.length > 0 && (
         <div className="overflow-x-auto rounded-form border border-line bg-white shadow-soft">
-          <table className="w-full min-w-160 border-collapse text-sm">
+          <table className="w-full min-w-160 border-collapse text-sm text-center">
             <thead>
-              <tr className="border-b border-line text-left text-xs font-semibold uppercase text-muted">
+              <tr className="border-b border-line text-xs font-semibold uppercase text-muted">
+                {showAll && <th className="px-4 py-3">Booking ID</th>}
                 <th className="px-4 py-3">Space</th>
                 {showAll && <th className="px-4 py-3">User</th>}
                 <th className="px-4 py-3">Start</th>
@@ -138,7 +143,42 @@ export default function MyBookingsPage() {
                 const st = bookingState(b);
                 return (
                   <tr key={b.id} className="border-b border-line/60 last:border-0 hover:bg-surface">
-                    <td className="px-4 py-4 font-semibold">{b.space_name}</td>
+                    {showAll && <td className="px-4 py-4 text-muted text-center text-xl">{b.id}</td>}
+                    
+                    <td className="px-4 py-4 font-semibold">
+                      <div className="flex flex-col items-center gap-1">
+                        <span>{b.space_name}</span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              // request availability to get all info of booking
+                              const dayStart = new Date(b.start_at);
+                              dayStart.setHours(0, 0, 0, 0);
+                              const dayEnd = new Date(dayStart);
+                              dayEnd.setDate(dayEnd.getDate() + 1);
+
+                              const spaces = await getAvailability(dayStart, dayEnd);
+                              const fullSpace = spaces.find((s) => s.id === b.space_id);
+
+                              setDetails({
+                                ...b,
+                                // if full space - data from it : fallback on booking
+                                category: fullSpace?.category || "",
+                                capacity: fullSpace?.capacity ?? 0,
+                                facilities: fullSpace?.facilities || [],
+                              });
+                            } catch {
+                              setDetails(b);
+                            }
+                          }}
+                          className="text-xs font-medium text-navy underline cursor-pointer"
+                        >
+                          Details
+                        </button>
+                      </div>
+                    </td>
+
                     {showAll && <td className="px-4 py-4">{b.user_name}</td>}
                     <td className="px-4 py-4">{formatDateTime(b.start_at)}</td>
                     <td className="px-4 py-4">{formatDateTime(b.end_at)}</td>
@@ -149,7 +189,7 @@ export default function MyBookingsPage() {
                     </td>
                     <td className="px-4 py-4">
                       {st === "open" && (
-                        <div className="flex gap-2">
+                        <div className="flex justify-center gap-2">
                           <button
                             onClick={() => {
                               setNotice("");
@@ -189,7 +229,7 @@ export default function MyBookingsPage() {
       {toCancel && (
         <ConfirmCancelModal
           spaceName={toCancel.space_name}
-          when={`${formatDateTime(toCancel.start_at)} - ${formatDateTime(toCancel.end_at)}`}
+          when={`${formatDateTime(toCancel.start_at)}\n${formatDateTime(toCancel.end_at)}`}
           loading={busy}
           error={cancelError}
           onClose={() => setToCancel(null)}
@@ -199,6 +239,21 @@ export default function MyBookingsPage() {
 
       {toEdit && (
         <EditBookingModal booking={toEdit} onClose={() => setToEdit(null)} onSaved={handleSaved} />
+      )}
+
+      {details && (
+        <SpaceDetailsModal
+          key={details.id}
+          space={{
+            id: details.space_id || details.space?.id || details.id,
+            name: details.space_name || details.space?.name || details.name,
+            category: details.space_category || details.category || details.space?.category || "",
+            capacity: details.space_capacity ?? details.capacity ?? details.space?.capacity ?? 0,
+            facilities: details.space_facilities || details.facilities || details.space?.facilities || []
+          }}
+          day={details.start_at}
+          onClose={() => setDetails(null)}
+        />
       )}
     </main>
   );

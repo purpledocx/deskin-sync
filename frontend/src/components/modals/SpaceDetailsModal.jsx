@@ -10,38 +10,46 @@ const hhmm = (iso) => {
 }
 
 export default function SpaceDetailsModal({ space, day, onClose }) {
-  const [slots, setSlots] = useState(null) // null -> loading
+
+  const [slots, setSlots] = useState(null)
   const [error, setError] = useState("")
 
-  const d = new Date(day)
-  const dayLabel = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
-  const facilities = Array.isArray(space.facilities) ? space.facilities : []
+  const parsedDay = day ? parseApiDate(day) : new Date()
+  const validDate = !isNaN(parsedDay?.getTime()) ? parsedDay : new Date()
+
+  const dayLabel = `${pad(validDate.getDate())}.${pad(validDate.getMonth() + 1)}.${validDate.getFullYear()}`
+  const facilities = Array.isArray(space?.facilities) ? space.facilities : []
 
   useEffect(() => {
+    if (!space || !day) return;
+    
     let ignore = false
 
-    // whole local day of the selected start time
-    const from = new Date(day)
+    const baseDate = parseApiDate(day)
+    const from = new Date(baseDate)
     from.setHours(0, 0, 0, 0)
 
     const till = new Date(from)
     till.setDate(till.getDate() + 1)
 
-    setSlots(null)
-    setError("")
+    console.log("Fetching bookings for range:", { from, till }); // <-- Проверьте диапазон
 
     getSpaceBookings(space.id, from, till)
       .then((data) => {
+        console.log("Received bookings data:", data); // <-- Что приходит с сервера?
         if (!ignore) setSlots(Array.isArray(data) ? data : [])
       })
       .catch((err) => {
+        console.error("Error fetching bookings:", err); // <-- Ловим ошибку запроса
         if (!ignore) setError(err.message || "Could not load bookings")
       })
 
     return () => {
       ignore = true
     }
-  }, [space.id, day])
+  }, [space, day])
+
+  if (!space) return null;
 
   return (
     <div

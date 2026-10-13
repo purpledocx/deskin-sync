@@ -54,7 +54,6 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (invalid) {
-            setSpaces(null)
             return
         }
 

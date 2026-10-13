@@ -138,6 +138,9 @@ def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Sessio
     
     _editable_window(booking)
 
+    if payload.start_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Start time can not be in the past")
+
 
     # get space + validation
     space = db.get(Space, payload.space_id)

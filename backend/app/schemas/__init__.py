@@ -1,7 +1,6 @@
 from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 from app.schemas.auth import Token, UserRegister, RegisteredUser
-from app.schemas.space import SpaceAvailabilityRead
-
+from app.schemas.space import SpaceAvailabilityRead, SpaceBookingSlot
 __all__ = [
     "BookingCreate",
     "BookingRead",
@@ -9,5 +8,6 @@ __all__ = [
     "Token",
     "UserRegister",
     "RegisteredUser",
-    "SpaceAvailabilityRead"
+    "SpaceAvailabilityRead",
+    "SpaceBookingSlot"
 ]

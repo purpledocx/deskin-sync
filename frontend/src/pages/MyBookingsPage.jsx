@@ -122,9 +122,10 @@ export default function MyBookingsPage() {
 
       {rows?.length > 0 && (
         <div className="overflow-x-auto rounded-form border border-line bg-white shadow-soft">
-          <table className="w-full min-w-160 border-collapse text-sm">
+          <table className="w-full min-w-160 border-collapse text-sm text-center">
             <thead>
-              <tr className="border-b border-line text-left text-xs font-semibold uppercase text-muted">
+              <tr className="border-b border-line text-xs font-semibold uppercase text-muted">
+                {showAll && <th className="px-4 py-3">Booking ID</th>}
                 <th className="px-4 py-3">Space</th>
                 {showAll && <th className="px-4 py-3">User</th>}
                 <th className="px-4 py-3">Start</th>
@@ -138,6 +139,7 @@ export default function MyBookingsPage() {
                 const st = bookingState(b);
                 return (
                   <tr key={b.id} className="border-b border-line/60 last:border-0 hover:bg-surface">
+                    {showAll && <td className="px-4 py-4 text-muted text-center text-xl">{b.id}</td>}
                     <td className="px-4 py-4 font-semibold">{b.space_name}</td>
                     {showAll && <td className="px-4 py-4">{b.user_name}</td>}
                     <td className="px-4 py-4">{formatDateTime(b.start_at)}</td>

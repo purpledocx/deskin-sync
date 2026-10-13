@@ -3,6 +3,7 @@ import { getBookings, cancelBooking } from "../api/bookings";
 import { getUser, canViewAll } from "../api/session";
 import { parseApiDate, formatDateTime } from "../api/dates";
 import ConfirmCancelModal from "../components/modals/ConfirmCancelModal";
+import EditBookingModal from "../components/modals/EditBookingModal";
 
 const MIN_BEFORE_CHANGE = 30 * 60 * 1000; // same rule as backend
 const LOCK_HINT = "Changes and cancellations are not possible within 30 minutes of the start.";
@@ -32,6 +33,9 @@ export default function MyBookingsPage() {
   const [toCancel, setToCancel] = useState(null);
   const [busy, setBusy] = useState(false);
   const [cancelError, setCancelError] = useState("");
+
+  // edit modal state
+  const [toEdit, setToEdit] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -72,6 +76,16 @@ export default function MyBookingsPage() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleSaved = (updated) => {
+    setBookings((list) =>
+      list
+        .map((b) => (b.id === updated.id ? updated : b))
+        .sort((a, b) => parseApiDate(a.start_at) - parseApiDate(b.start_at))
+    );
+    setNotice(`Booking for ${updated.space_name} was updated.`);
+    setToEdit(null);
   };
 
   const seg = (active) =>
@@ -135,15 +149,27 @@ export default function MyBookingsPage() {
                     </td>
                     <td className="px-4 py-4">
                       {st === "open" && (
-                        <button
-                          onClick={() => openCancel(b)}
-                          className="btn btn-secondary h-9 border-cancel text-cancel hover:bg-bad-soft"
-                        >
-                          Cancel
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setNotice("");
+                              setToEdit(b);
+                            }}
+                            className="btn btn-secondary h-9"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => openCancel(b)}
+                            className="btn btn-secondary h-9 border-cancel text-cancel hover:bg-bad-soft"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       )}
                       {st === "locked" && (
-                        <span className="group relative inline-block">
+                        <span className="group relative inline-flex gap-2">
+                          <button disabled className="btn btn-secondary h-9">Edit</button>
                           <button disabled className="btn btn-secondary h-9">Cancel</button>
                           <span className="pointer-events-none absolute bottom-full right-0 z-10 mb-2 hidden w-64 rounded bg-ink px-3 py-2 text-xs text-white group-hover:block">
                             {LOCK_HINT}
@@ -169,6 +195,10 @@ export default function MyBookingsPage() {
           onClose={() => setToCancel(null)}
           onConfirm={confirmCancel}
         />
+      )}
+
+      {toEdit && (
+        <EditBookingModal booking={toEdit} onClose={() => setToEdit(null)} onSaved={handleSaved} />
       )}
     </main>
   );

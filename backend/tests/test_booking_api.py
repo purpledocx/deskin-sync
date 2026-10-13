@@ -412,3 +412,12 @@ def test_teacher_can_cancell_other_users_booking(db_session, auth_as, seeded_dat
 
     assert response.status_code == 200
     assert response.json()["status"] == "cancelled"
+
+def test_admin_can_cancel_booking_inside_30_min_window(db_session, auth_as, seeded_data, admin_user):
+    soon = datetime.now(timezone.utc) + timedelta(minutes=10)
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], soon, soon + timedelta(hours=1))
+
+    client = auth_as(admin_user)
+    response = client.delete(f"/bookings/{booking.id}")
+
+    assert response.status_code == 200

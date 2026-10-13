@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 
@@ -77,6 +77,11 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
         raise HTTPException(status_code= status.HTTP_409_CONFLICT, detail="Space is not active")
 
 
+    # booking in the past is impossible -> check BEFORE overlap validation
+    if booking_data.start_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime('%H:%M:%S %d-%m-%Y')}")
+
+
     # validate data -> create booking with following data -> add it to db -> return booking
     try:
         validate_booking_time(
@@ -88,9 +93,7 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
     except BookingOverlapError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
 
-    if booking_data.start_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime('%H:%M:%S %d-%m-%Y')}")
-
+        
     booking = Booking(
         user_id = current_user.id,
         space_id = booking_data.space_id,
@@ -111,7 +114,10 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
 @router.get("/", response_model=list[BookingRead]) #returns list
 def list_bookings(db: Annotated[Session, Depends(get_db)],current_user: Annotated[User, Depends(get_current_user)]): # Depends(get_current_user) will automatically get user based on JWT
 
-    query = db.query(Booking)
+    query = db.query(Booking).options(
+        joinedload(Booking.space),
+        joinedload(Booking.user)
+    )
 
     if not _can_view_all(current_user):
         query = query.filter(Booking.user_id == current_user.id)
@@ -131,6 +137,9 @@ def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Sessio
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Only active bookings can be modified")
     
     _editable_window(booking)
+
+    if payload.start_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Start time can not be in the past")
 
 
     # get space + validation

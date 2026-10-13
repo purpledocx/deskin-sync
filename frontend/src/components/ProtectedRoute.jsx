@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
-import { getToken } from "../api/client";
+import { getUser } from "../api/session";
 
 export default function ProtectedRoute({ children }) {
-  return getToken() ? children : <Navigate to="/register?mode=login" replace />;
+  return getUser() ? children : <Navigate to="/register?mode=login" replace />;
 }

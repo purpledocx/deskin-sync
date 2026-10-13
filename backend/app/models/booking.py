@@ -21,3 +21,11 @@ class Booking(Base):
 
     user: Mapped["User"] = relationship(back_populates="bookings")
     space: Mapped["Space"] = relationship(back_populates="bookings")
+
+    @property
+    def space_name(self) -> str:
+        return self.space.name
+
+    @property
+    def user_name(self) -> str:
+        return self.user.name

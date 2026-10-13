@@ -21,7 +21,7 @@ export default function Stack() {
     return(
         <section className="bg-white border-line border-y py-6">
             <div className="flex flex-col mx-auto items-center gap-3 px-6">
-                <p className="text-sm text-ink/60">Built with modern and secure stack</p>
+                <p className="text-sm text-muted">Built with modern and secure stack</p>
                 <div className="flex flex-wrap justify-center gap-3">
                     {stack.map((item) => (
                         <div 

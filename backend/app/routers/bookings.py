@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 
@@ -114,7 +114,10 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
 @router.get("/", response_model=list[BookingRead]) #returns list
 def list_bookings(db: Annotated[Session, Depends(get_db)],current_user: Annotated[User, Depends(get_current_user)]): # Depends(get_current_user) will automatically get user based on JWT
 
-    query = db.query(Booking)
+    query = db.query(Booking).options(
+        joinedload(Booking.space),
+        joinedload(Booking.user)
+    )
 
     if not _can_view_all(current_user):
         query = query.filter(Booking.user_id == current_user.id)

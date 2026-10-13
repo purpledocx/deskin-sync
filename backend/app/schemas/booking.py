@@ -43,8 +43,12 @@ class BookingRead(BookingBase):
     user_id: int
     status: str
     created_at: datetime
+    space_name: str
+    user_name: str
 
     model_config = ConfigDict(from_attributes=True) #allows read data direct from sqlalchemy
+
+    
 
 
 class BookingUpdate(BookingBase):

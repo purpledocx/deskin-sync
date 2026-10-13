@@ -16,7 +16,7 @@ export default function Hero() {
                 
                 <div className="flex items-center justify-center">
                     <img 
-                        src={"../../../dist/Dashboard.png"} 
+                        src={"../../../public/Dashboard.png"} 
                         alt="DeskIn Sync Dashboard Screenshot" 
                         className="w-full h-auto rounded-xl shadow-xl border border-line/50 object-cover"
                     />

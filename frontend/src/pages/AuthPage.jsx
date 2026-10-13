@@ -69,7 +69,13 @@ export default function AuthPage() {
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col items-center justify-center gap-6 bg-surface md:flex">
         <Link to="/" className="text-3xl font-semibold text-navy">DeskIn Sync</Link>
-        <div className="text-muted">[workspace screenshot]</div>
+        <div className="flex items-center justify-center">
+          <img 
+              src={"../../dist/Workspace.png"} 
+              alt="DeskIn Sync Workspace Screenshot" 
+              className="w-full h-auto rounded-xl shadow-xl border border-line/50 object-cover"
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-center p-6">

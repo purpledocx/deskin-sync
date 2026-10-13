@@ -13,7 +13,7 @@ export default function Hero() {
                         <a href="#how-it-work" className=" text-ink bg-white border border-line rounded px-6 py-3">How does it work?</a>
                     </div>
                 </div>
-                <div className="flex h-96 items-center justify-center rounded-xl border-dashed border-2 bg-white">[Screenshot of Dashboard]</div>
+                <div className="flex h-96 items-center justify-center rounded-form border-dashed border-2 bg-white">[Screenshot of Dashboard]</div>
             </div>
         </section>
     )

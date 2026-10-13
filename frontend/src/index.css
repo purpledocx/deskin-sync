@@ -18,8 +18,20 @@
   --color-cancel: #dc2626;
   --color-disabled: #9ca3af;
 
-  --shadow-soft: 0 1px 3px rgb(0 0 0 / 0.05);
+  --shadow-soft: 0 1px 3px rgb(16 24 40 / 0.12);
   --radius-form: 6px;
+
+  --color-focus: #bfd0e6;
+  --color-muted: #4b5563;
+  --color-chip: #374151;
+  --color-ok-soft: #d1fae5;
+  --color-ok-ink: #065f46;
+  --color-bad-soft: #fee2e2;
+  --color-bad-ink: #991b1b;
+  --color-disabled-bg: #e5e7eb;
+  --color-disabled-ink: #6b7280;
+  --color-disabled-line: #d1d5db;
+  --shadow-hover: 0 4px 10px rgb(16 24 40 / 0.16);
 }
 
 @layer base {
@@ -33,4 +45,17 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+@layer components {
+  .btn { @apply inline-flex h-10.5 items-center justify-center rounded-form border border-navy px-5 text-[15px] font-medium transition-colors duration-200 ease-in-out; }
+  .btn-primary { @apply bg-navy text-white hover:bg-navy-hover; }
+  .btn-secondary { @apply bg-white text-navy hover:bg-surface; }
+  .btn-danger { @apply border-cancel bg-cancel text-white hover:opacity-90; }
+  .btn:disabled { @apply cursor-not-allowed border-disabled-line bg-disabled-bg text-disabled-ink opacity-100; }
+  .field { @apply h-10.5 w-full rounded-form border border-line bg-white px-3.5 text-[15px] outline-none focus:border-navy focus:ring-2 focus:ring-focus; }
+  .badge { @apply rounded px-2.5 py-0.75 text-[13px] font-semibold; }
+  .badge-ok { @apply bg-ok-soft text-ok-ink; }
+  .badge-bad { @apply bg-bad-soft text-bad-ink; }
+  .chip { @apply rounded border border-line bg-surface px-2.5 py-0.75 text-xs text-chip; }
 }

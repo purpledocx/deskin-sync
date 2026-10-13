@@ -40,12 +40,12 @@ export default function Pricing() {
             <div className="grid gap-6 md:grid-cols-3">
 
                 {plans.map((p) => (
-                    <div key={p.name} className={`bg-white p-7 rounded-lg flex flex-col shadow-sm ${p.highlight ? " border-navy border-2" : "border border-line"} `}>
+                    <div key={p.name} className={`bg-white p-7 rounded-lg flex flex-col shadow-soft ${p.highlight ? " border-navy border-2" : "border border-line"} `}>
 
                         <h3 className="font-semibold">{p.name}</h3>
                         
                         <div className="font-semibold text-4xl">
-                            {p.price} <span className="text-innk/60 text-sm font-normal">{p.unit}</span>
+                            {p.price} <span className="text-muted text-sm font-normal">{p.unit}</span>
                         </div>
                         
                         <ul className="text-ink/80 text-sm list-disc flex-1 pl-5 space-y-1">

@@ -27,7 +27,7 @@ export default function Features() {
         
         {features.map((f) => (
           
-          <div key={f.title} className="bg-white shadow-sm p-7 border border-line rounded-lg flex flex-col gap-4">
+          <div key={f.title} className="bg-white shadow-soft p-7 border border-line rounded-lg flex flex-col gap-4">
             
             <div className="flex items-center gap-3">
 

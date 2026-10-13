@@ -1,18 +1,16 @@
 import { useState } from "react"
 import { createBooking } from "../../api/bookings"
 
-const fieldCSS = "h-11 w-full rounded-md border border-line px-3 outline-none focus:border-navy focus:ring-2 focus:ring-navy/20"
-
 export default function BookingModal({space, start: s0, end: e0, onClose, onBooked}) {
 
     // set time range
     const [start, setStart] = useState(s0)
     const [end, setEnd] = useState(e0)
-
+   
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
 
-
+    
     const submit = async (e) => {
         e.preventDefault()
         setError("")
@@ -45,21 +43,21 @@ export default function BookingModal({space, start: s0, end: e0, onClose, onBook
             <form
                 onSubmit={submit}
                 onClick={(e) => e.stopPropagation()}
-                className="flex w-full max-w-md flex-col gap-4 rounded-xl bg-white p-6 shadow-lg"
+                className="flex w-full max-w-md flex-col gap-4 rounded-form bg-white p-6 shadow-lg"
             >
                 <h2 className="text-navy font-semibold text-2xl">Book {space.name}</h2>
-                <p className="text-ink/60">{space.category} | {space.capacity} {space.capacity === 1 ? "seat" : "seats"}</p>
+                <p className="text-muted">{space.category} | {space.capacity} {space.capacity === 1 ? "seat" : "seats"}</p>
 
                 <label className="flex flex-col gap-1 font-medium">From
-                    <input type="datetime-local" className={fieldCSS} value={start} onChange={(e) => setStart(e.target.value)} required />
+                    <input type="datetime-local" className="field" value={start} onChange={(e) => setStart(e.target.value)} required />
                 </label>
 
                 <label className="flex flex-col gap-1 font-medium">Till
-                    <input type="datetime-local" className={fieldCSS} value={end} onChange={(e) => setEnd(e.target.value)} required />
+                    <input type="datetime-local" className="field" value={end} onChange={(e) => setEnd(e.target.value)} required />
                 </label>
 
                 {error && (
-                    <div className="rounded-md border border-bad px-3 py-2 text-sm text-bad">{error}</div>
+                    <div className="rounded-form border border-bad bg-bad-soft px-3 py-2 text-sm text-bad-ink">{error}</div>
                 )}
 
                 <div className="flex gap-3">

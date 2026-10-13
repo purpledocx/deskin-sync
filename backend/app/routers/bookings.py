@@ -77,6 +77,11 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
         raise HTTPException(status_code= status.HTTP_409_CONFLICT, detail="Space is not active")
 
 
+    # booking in the past is impossible -> check BEFORE overlap validation
+    if booking_data.start_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime('%H:%M:%S %d-%m-%Y')}")
+
+
     # validate data -> create booking with following data -> add it to db -> return booking
     try:
         validate_booking_time(
@@ -88,9 +93,7 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
     except BookingOverlapError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
 
-    if booking_data.start_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime('%H:%M:%S %d-%m-%Y')}")
-
+        
     booking = Booking(
         user_id = current_user.id,
         space_id = booking_data.space_id,

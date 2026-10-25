@@ -46,6 +46,11 @@ class BookingRead(BookingBase):
     space_name: str
     user_name: str
 
+    # verdict of the role rules for the requesting user, filled in by the router.
+    # the frontend renders these instead of re-evaluating the 30-minute rule itself
+    can_modify: bool = False
+    lock_hint: str | None = None
+
     model_config = ConfigDict(from_attributes=True) #allows read data direct from sqlalchemy
 
     

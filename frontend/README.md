@@ -55,8 +55,8 @@ The frontend is a single-page application built with React 19 and Vite. It talks
 - **Live availability** — pick a time range (30-minute steps) and see every active space as *Available* or *Booked*, including when a booked space becomes free (with a **Show then** shortcut).
 - **Space details** — category, capacity, facilities and the booked time slots for that day.
 - **Book in a modal** — the selected time range is pre-filled; server errors (overlap, past time, inactive space) are shown inline.
-- **My bookings** — status labels (*Active*, *Finished*, *Cancelled*), **Edit** and **Cancel** actions, and locked actions with a tooltip within 30 minutes of the start.
-- **Role-aware UI** — teachers and admins can switch between *My bookings* and *All bookings* (with booking ID and user columns).
+- **My bookings** — status labels (*Active*, *Finished*, *Cancelled*), **Edit** and **Cancel** actions, and locked actions with a tooltip explaining why, as reported by the API.
+- **Role-aware UI** — teachers and admins can switch between *My bookings* and *All bookings* (with booking ID and user columns); a teacher sees everyone's bookings but can only change their own.
 - **Client-side validation** on sign up that mirrors the backend rules, plus readable messages for FastAPI `422` validation errors.
 - **Protected routes** — `/app/*` is only reachable with a valid, non-expired token.
 
@@ -115,7 +115,7 @@ frontend/
 | `/register` | `AuthPage` (sign up tab) | Public | Create an account (new users become *Student*), then you are logged in automatically. |
 | `/register?mode=login` | `AuthPage` (log in tab) | Public | Log in with email and password. |
 | `/app` | `DashboardPage` | Logged in | Choose *From* / *Till*, browse spaces, open **Details**, **Book** a free space. |
-| `/app/bookings` | `MyBookingsPage` | Logged in | See your bookings; **Edit** or **Cancel** upcoming ones. Teachers and admins can switch to **All bookings**. |
+| `/app/bookings` | `MyBookingsPage` | Logged in | See your bookings; **Edit** or **Cancel** upcoming ones. Teachers and admins can switch to **All bookings** (a teacher there is read-only). |
 
 **Typical flow:** sign up → land on `/app` → set a time range → **Book** → confirm in the modal → see the success message → open **My bookings** → reschedule or cancel.
 
@@ -123,7 +123,7 @@ Behaviour worth knowing:
 
 - Times are picked in the browser's local time zone, sent to the API as UTC ISO strings (`toISOString()`), and shown again in local time as `dd.MM.yyyy HH:mm`.
 - Booking is disabled when the selected start time is in the past.
-- In *My bookings*, Edit/Cancel are disabled within 30 minutes of the start for every role (the backend lets admins change bookings at any time).
+- In *My bookings*, Edit/Cancel are shown exactly when the API reports `can_modify` for the booking, and the tooltip on a disabled action is the `lock_hint` the API returned. The 30-minute rule and the role permissions are never evaluated in the browser, so an admin keeps the actions a student loses.
 - Cancelled bookings stay in the list with the *Cancelled* status.
 
 ## Prerequisites

@@ -9,7 +9,7 @@ export default function Hero() {
                     <h1 className="text-5xl text-navy font-semibold leading-tight">Book desks and meeting rooms in easiest way ever!</h1>
                     <p className="text-lg text-ink/70">Reserving spaces is now effortless for students, teachers, and admins. DeskIn Sync lets students, teachers and admins reserve spaces just in few clicks! With live availability and clear guidance.</p>
                     <div className="flex gap-3">
-                        <Link to="/register?method=login" className="text-white bg-navy rounded-md px-6 py-3 font-medium hover:bg-steel transition-colors duration-200 ease-in-out">Begin with demo</Link>
+                        <Link to="/register?mode=login" className="text-white bg-navy rounded-md px-6 py-3 font-medium hover:bg-steel transition-colors duration-200 ease-in-out">Begin with demo</Link>
                         <a href="#how-it-work" className=" text-ink bg-white border border-line rounded px-6 py-3">How does it work?</a>
                     </div>
                 </div>

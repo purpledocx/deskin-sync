@@ -33,9 +33,17 @@ export default function Pricing() {
     return(
         <section id="pricing" className="max-w-6xl px-6 py-20 mx-auto scroll-mt-20">
             
-            <h2 className="text-3xl text-navy font-semibold">Pricing</h2>
-            
-            <p className="text-ink/70 mt-2 mb-10">From small team to giant enterprises, we've got you covered!</p>
+            <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-3xl text-navy font-semibold">Pricing</h2>
+                <span className="rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                    Example plans
+                </span>
+            </div>
+
+            <p className="text-ink/70 mt-2 mb-10">
+                From small team to giant enterprises, we've got you covered! The plans below are
+                examples for this demo - DeskIn Sync does not process any payments.
+            </p>
             
             <div className="grid gap-6 md:grid-cols-3">
 

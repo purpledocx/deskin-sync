@@ -52,6 +52,8 @@ The backend is a FastAPI application (`app/main.py`, title **DeskIn SmartDesk AP
 - create, reschedule and cancel bookings,
 - see their own bookings — or, for teachers and admins, everyone's bookings.
 
+The booking rules depend on the caller's role, and the API reports its verdict per booking, so clients never have to re-implement them — see [Roles and permissions](#roles-and-permissions).
+
 Business rules (overlap prevention, past-time checks, the 30-minute change window and role permissions) are enforced on the server, so the API stays consistent no matter which client calls it.
 
 ## Key features
@@ -63,7 +65,7 @@ Business rules (overlap prevention, past-time checks, the 30-minute change windo
 - **Soft cancellation**: cancelled bookings keep their history (`status = "cancelled"`).
 - **Timezone-safe input**: datetimes sent without an offset are treated as UTC.
 - **Alembic migrations** plus an idempotent **demo data seeder** (`seeder.py`).
-- **49 pytest tests** covering auth, booking API, availability, overlap logic and role strategies.
+- **58 pytest tests** covering auth, booking API, availability, overlap logic and role strategies.
 
 ## Tech stack
 
@@ -324,7 +326,7 @@ sequenceDiagram
 | Refresh / logout | Not implemented. There is no refresh token, logout endpoint or token revocation — clients sign in again when the token expires. |
 | Authorization source | On every request the user is loaded from the database by the `sub` email, and permissions are based on that user's current role in the database. |
 
-**Protected endpoints:** every `/bookings` endpoint requires a valid token. `/auth/*`, `/spaces/*` and `/health*` are public.
+**Protected endpoints:** every `/bookings` and `/spaces` endpoint requires a valid token. Only `/auth/*` and `/health*` are public.
 
 ## Roles and permissions
 
@@ -334,10 +336,21 @@ Rules live in `app/strategies/role_strategy.py`. An unknown role falls back to t
 | --- | :---: | :---: | :---: |
 | Create bookings | ✅ | ✅ | ✅ |
 | See bookings of all users (`GET /bookings/`) | Own only | ✅ | ✅ |
-| Edit / cancel other users' bookings | — | ✅ | ✅ |
-| Minimum time before start to edit or cancel | 30 min | 30 min | No limit |
+| Edit / cancel other users' bookings | — | — | ✅ |
+| Minimum time before start to edit or cancel | 30 min | 30 min | Until the start |
 
 New accounts created through `/auth/register` are always Students. Teacher and Admin accounts come from the seeder (or a direct database change); there is no API endpoint for changing roles.
+
+A Teacher therefore has a read-only overview of everyone's bookings, while changing and cancelling stays with the owner and the Admin.
+
+Because these rules belong to the API, `BookingRead` carries the outcome for the requesting user:
+
+| Field | Meaning |
+| --- | --- |
+| `can_modify` | `true` when this user may edit or cancel this booking right now |
+| `lock_hint` | `null` when `can_modify` is `true`, otherwise the reason a change is refused |
+
+A client only has to render those two fields; `PUT` and `DELETE` apply the same check again and answer `403` or `409` if it no longer holds.
 
 ## API reference
 
@@ -361,8 +374,8 @@ Base URL for local development: `http://127.0.0.1:8000`
 
 | Method | Path | Auth | Query | Success | Errors |
 | --- | --- | :---: | --- | --- | --- |
-| `GET` | `/spaces/availability` | — | `start_at`, `end_at` (ISO 8601) | `200` list of `SpaceAvailabilityRead` | `400` start ≥ end, `422` missing params |
-| `GET` | `/spaces/{space_id}/bookings` | — | `start_at`, `end_at` | `200` list of `{start_at, end_at}` | `400` start ≥ end, `404` unknown space |
+| `GET` | `/spaces/availability` | JWT | `start_at`, `end_at` (ISO 8601) | `200` list of `SpaceAvailabilityRead` | `400` start ≥ end, `401` no / invalid token, `422` missing params |
+| `GET` | `/spaces/{space_id}/bookings` | JWT | `start_at`, `end_at` | `200` list of `{start_at, end_at}` | `400` start ≥ end, `401` no / invalid token, `404` unknown space |
 
 `/spaces/availability` lists only **active** spaces. `is_available` is `false` when an active booking overlaps the window, and `available_from` is then the latest end time among those overlapping bookings. `/spaces/{id}/bookings` returns only the time slots of active bookings — no user data.
 
@@ -386,7 +399,7 @@ Base URL for local development: `http://127.0.0.1:8000`
 | `RegisteredUser` | `id`, `name`, `email`, `role` |
 | `Token` | `access_token`, `token_type` |
 | `BookingCreate` / `BookingUpdate` | `space_id` (> 0), `start_at`, `end_at` |
-| `BookingRead` | `id`, `user_id`, `space_id`, `space_name`, `user_name`, `start_at`, `end_at`, `status`, `created_at` |
+| `BookingRead` | `id`, `user_id`, `space_id`, `space_name`, `user_name`, `start_at`, `end_at`, `status`, `created_at`, `can_modify`, `lock_hint` |
 | `SpaceAvailabilityRead` | `id`, `name`, `capacity`, `category`, `facilities[]`, `is_available`, `available_from` |
 | `SpaceBookingSlot` | `start_at`, `end_at` |
 
@@ -484,7 +497,9 @@ curl -X POST http://127.0.0.1:8000/bookings/ \
   "status": "active",
   "created_at": "2026-10-25T13:43:08.135101+01:00",
   "space_name": "Meeting Room B1",
-  "user_name": "Jane Doe"
+  "user_name": "Jane Doe",
+  "can_modify": true,
+  "lock_hint": null
 }
 ```
 

@@ -35,10 +35,17 @@ def test_student_manages_only_own_bookings():
     assert not s.can_view_all()
 
 
-def test_teacher_views_and_manages_all():
+def test_teacher_views_all_but_manages_only_own():
     t = TeacherStrategy()
     assert t.can_view_all()
-    assert t.can_manage_booking(make_booking(2), make_user(1, "Teacher"))
+    assert t.can_manage_booking(make_booking(1), make_user(1, "Teacher"))
+    assert not t.can_manage_booking(make_booking(2), make_user(1, "Teacher"))
+
+
+def test_admin_views_and_manages_all():
+    a = AdminStrategy()
+    assert a.can_view_all()
+    assert a.can_manage_booking(make_booking(2), make_user(1, "Admin"))
 
 
 def test_time_limits_per_role():

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent # loadenv couldnt find .env so this added
 dotenv_path = BASE_DIR / ".env"
+load_dotenv(dotenv_path) # without this TEST_DATABASE_URL is only found when exported by hand
 
 import pytest
 from sqlalchemy import create_engine, select

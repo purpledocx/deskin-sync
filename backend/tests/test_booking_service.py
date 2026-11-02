@@ -2,7 +2,14 @@ import pytest
 
 from app.models import Booking, Space
 
-from app.services.booking_service import BookingOverlapError, validate_booking_time
+from app.services.booking_service import (
+    BookingInPastError,
+    BookingOverlapError,
+    SpaceInactiveError,
+    SpaceNotFoundError,
+    create_booking as create_booking_service,
+    validate_booking_time,
+)
 
 from datetime import datetime, timezone, timedelta
 
@@ -97,3 +104,42 @@ def test_allows_same_time_different_space(db_session, seeded_data):
 def test_rejects_invalid_time_range(db_session, seeded_data):
     with pytest.raises(ValueError):
         validate_booking_time(db_session, seeded_data["space_id"], date_time(11), date_time(10))
+
+
+
+"""------------------------------CREATE BOOKING (service layer)------------------------------"""
+
+def test_service_creates_active_booking(db_session, seeded_data):
+    booking = create_booking_service(db_session, seeded_data["user_id"], seeded_data["space_id"], date_time(9), date_time(10))
+
+    assert booking.id is not None
+    assert booking.status == "active"
+    assert booking.user_id == seeded_data["user_id"]
+
+
+def test_service_rejects_unknown_space(db_session, seeded_data):
+    with pytest.raises(SpaceNotFoundError):
+        create_booking_service(db_session, seeded_data["user_id"], 999999, date_time(9), date_time(10))
+
+
+def test_service_rejects_inactive_space(db_session, seeded_data):
+    space = db_session.get(Space, seeded_data["space_id"])
+    space.is_active = False
+    db_session.flush()
+
+    with pytest.raises(SpaceInactiveError):
+        create_booking_service(db_session, seeded_data["user_id"], seeded_data["space_id"], date_time(9), date_time(10))
+
+
+def test_service_rejects_booking_in_past(db_session, seeded_data):
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+
+    with pytest.raises(BookingInPastError):
+        create_booking_service(db_session, seeded_data["user_id"], seeded_data["space_id"], yesterday, yesterday + timedelta(hours=1))
+
+
+def test_service_rejects_overlap(db_session, seeded_data):
+    create_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], 9, 11)
+
+    with pytest.raises(BookingOverlapError):
+        create_booking_service(db_session, seeded_data["user_id"], seeded_data["space_id"], date_time(10), date_time(12))

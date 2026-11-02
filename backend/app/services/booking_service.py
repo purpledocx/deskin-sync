@@ -1,11 +1,23 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.models import Booking
-from datetime import datetime
+from app.models import Booking, Space
+from datetime import datetime, timezone
 
 
 class BookingOverlapError(ValueError):
     """Space is already bookoed for the selected time"""
+
+
+class SpaceNotFoundError(LookupError):
+    """Requested space does not exist"""
+
+
+class SpaceInactiveError(ValueError):
+    """Requested space exists but can not be booked"""
+
+
+class BookingInPastError(ValueError):
+    """Requested start time lies in the past"""
 
 
 def validate_booking_time(
@@ -37,3 +49,50 @@ def validate_booking_time(
         raise BookingOverlapError(
             "This space is already booked for the selected time"
         )
+
+
+def get_bookable_space(db: Session, space_id: int) -> Space:
+    """Fetch a space and make sure it can be booked (sequence diagram: steps 6-11)"""
+
+    space = db.get(Space, space_id)
+
+    if space is None:
+        raise SpaceNotFoundError("Space does not exist")
+    if not space.is_active:
+        raise SpaceInactiveError("Space is not active")
+
+    return space
+
+
+def create_booking(
+    db: Session,
+    user_id: int,
+    space_id: int,
+    start_at: datetime,
+    end_at: datetime
+) -> Booking:
+    """Create an active booking (sequence diagram: steps 6-23).
+    The router only translates the errors raised here into HTTP status codes"""
+
+    get_bookable_space(db, space_id)
+
+    # booking in the past is impossible -> checked BEFORE the overlap query, saves a DB round trip
+    now = datetime.now(timezone.utc)
+    if start_at < now:
+        raise BookingInPastError(f"Start time can not be earlier than {now.strftime('%H:%M:%S %d-%m-%Y')}")
+
+    validate_booking_time(db=db, space_id=space_id, start_at=start_at, end_at=end_at)
+
+    booking = Booking(
+        user_id=user_id,
+        space_id=space_id,
+        start_at=start_at,
+        end_at=end_at,
+        status="active"
+    )
+
+    db.add(booking)
+    db.commit()
+    db.refresh(booking)
+
+    return booking

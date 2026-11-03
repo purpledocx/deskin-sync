@@ -3,7 +3,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.database import get_db
-from app.models import Space,SpaceFacility, Facility, Booking
+from app.dependencies import get_current_user
+from app.models import Space,SpaceFacility, Facility, Booking, User
 
 from datetime import datetime, timedelta
 
@@ -13,10 +14,25 @@ from datetime import datetime, timedelta
 
 
 @pytest.fixture
-def client(db_session):
+def client(db_session, seeded_data):
+    """Acts as the seeded user: both spaces endpoints require a valid token"""
+
     def override_get_db():
         yield db_session
-    
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: db_session.get(User, seeded_data["user_id"])
+    yield TestClient(app)
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def anon_client(db_session):
+    """No token at all - used to check that the endpoints are protected"""
+
+    def override_get_db():
+        yield db_session
+
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()
@@ -213,3 +229,21 @@ def test_space_bookings_invalid_range_400(client, seeded_data):
     start, end = _slot()
     response = client.get(f"/spaces/{seeded_data['space_id']}/bookings", params={"start_at": end.isoformat(), "end_at": start.isoformat()})
     assert response.status_code == 400
+
+def test_availability_requires_token(anon_client, seeded_data):
+    start, end = _slot()
+
+    response = _availability(anon_client, start, end)
+
+    assert response.status_code == 401
+
+
+def test_space_bookings_requires_token(anon_client, seeded_data):
+    start, end = _slot()
+
+    response = anon_client.get(
+        f"/spaces/{seeded_data['space_id']}/bookings",
+        params={"start_at": start.isoformat(), "end_at": end.isoformat()}
+    )
+
+    assert response.status_code == 401

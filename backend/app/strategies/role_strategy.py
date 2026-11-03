@@ -30,13 +30,15 @@ class StudentStrategy(RoleStrategy):
 
 
 class TeacherStrategy(RoleStrategy):
+    """Sees every booking, but may only change or cancel own ones"""
+
     min_mins_before_change = 30
 
     def can_view_all(self) -> bool:
         return True
-    
+
     def can_manage_booking(self, booking, user) -> bool:
-        return True
+        return booking.user_id == user.id
 
 
 
@@ -47,7 +49,7 @@ class AdminStrategy(RoleStrategy):
     def can_view_all(self) -> bool:
         return True
     
-    def can_manage_booking(self, bookig, user) -> bool:
+    def can_manage_booking(self, booking, user) -> bool:
         return True
 
 

@@ -32,15 +32,12 @@ export default function SpaceDetailsModal({ space, day, onClose }) {
     const till = new Date(from)
     till.setDate(till.getDate() + 1)
 
-    console.log("Fetching bookings for range:", { from, till }); // <-- Проверьте диапазон
 
     getSpaceBookings(space.id, from, till)
       .then((data) => {
-        console.log("Received bookings data:", data); // <-- Что приходит с сервера?
         if (!ignore) setSlots(Array.isArray(data) ? data : [])
       })
       .catch((err) => {
-        console.error("Error fetching bookings:", err); // <-- Ловим ошибку запроса
         if (!ignore) setError(err.message || "Could not load bookings")
       })
 

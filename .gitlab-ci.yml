@@ -1,0 +1,51 @@
+stages:
+  - test
+
+# Pytest suite for the FastAPI backend. Runs against a throwaway PostgreSQL
+# service container; the database name must contain "deskin_sync_test",
+# otherwise tests/conftest.py refuses to start.
+backend-tests:
+  stage: test
+  image: python:3.14-slim
+  services:
+    - name: postgres:17-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: deskin_sync_test
+    POSTGRES_USER: deskin
+    POSTGRES_PASSWORD: deskin
+    DATABASE_URL: "postgresql+psycopg://deskin:deskin@postgres:5432/deskin_sync_test"
+    TEST_DATABASE_URL: "postgresql+psycopg://deskin:deskin@postgres:5432/deskin_sync_test"
+    JWT_SECRET_KEY: "ci-only-secret-never-used-outside-the-pipeline"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    key: "pip-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .cache/pip
+  before_script:
+    - cd backend
+    - pip install --no-cache-dir -r requirements.txt
+  script:
+    - python -m pytest -q
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
+# ESLint for the React frontend, as required by the Definition of Done
+frontend-lint:
+  stage: test
+  image: node:24-alpine
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.cache/npm"
+  cache:
+    key: "npm-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .cache/npm
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH

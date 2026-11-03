@@ -7,16 +7,14 @@ import ConfirmCancelModal from "../components/modals/ConfirmCancelModal";
 import EditBookingModal from "../components/modals/EditBookingModal";
 import SpaceDetailsModal from "../components/modals/SpaceDetailsModal";
 
-const MIN_BEFORE_CHANGE = 30 * 60 * 1000; // same rule as backend
-const LOCK_HINT = "Changes and cancellations are not possible within 30 minutes of the start.";
-
-// cancelled | finished | locked (<30 min to start) | open
+// The role rules (who may change what, and how long before the start) are evaluated
+// by the API only: every booking arrives with `can_modify` and, when locked, a
+// `lock_hint` explaining why. This page just renders that verdict.
+// cancelled | finished | locked (API refuses changes) | open
 const bookingState = (b) => {
   if (b.status === "cancelled") return "cancelled";
-  const now = Date.now();
-  if (parseApiDate(b.end_at) < now) return "finished";
-  if (parseApiDate(b.start_at) - now < MIN_BEFORE_CHANGE) return "locked";
-  return "open";
+  if (parseApiDate(b.end_at) < Date.now()) return "finished";
+  return b.can_modify ? "open" : "locked";
 };
 
 const STATUS_LABEL = { open: "Active", locked: "Active", finished: "Finished", cancelled: "Cancelled" };
@@ -212,7 +210,7 @@ export default function MyBookingsPage() {
                           <button disabled className="btn btn-secondary h-9">Edit</button>
                           <button disabled className="btn btn-secondary h-9">Cancel</button>
                           <span className="pointer-events-none absolute bottom-full right-0 z-10 mb-2 hidden w-64 rounded bg-ink px-3 py-2 text-xs text-white group-hover:block">
-                            {LOCK_HINT}
+                            {b.lock_hint}
                           </span>
                         </span>
                       )}

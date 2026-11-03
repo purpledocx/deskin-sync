@@ -2,7 +2,7 @@
 
 # DeskIn Sync
 
-**Book desks and rooms by the hour or by the day.**
+**Book desks and rooms for any time window.**
 A full-stack booking app for students, teachers and admins — live availability, overlap-free bookings and role-based rules.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
@@ -36,9 +36,39 @@ DeskIn Sync lets users find a free desk, focus booth, meeting room or training r
 - **Live availability** — see which spaces are available or booked for any time range, and when a booked space becomes free.
 - **Overlap-free bookings** — the API never allows two active bookings for the same space at the same time.
 - **Edit and cancel** — reschedule or cancel bookings; cancelled bookings stay in the history.
-- **Roles** — *Student*, *Teacher* and *Admin* with different viewing and editing rights, plus a 30-minute change window for students and teachers.
+- **Roles** — *Student*, *Teacher* and *Admin* with different viewing and editing rights; see [Booking rules](#booking-rules).
 - **JWT authentication** — OAuth2 password flow with bcrypt-hashed passwords.
 - **Tested** — 49 pytest tests for authentication, bookings, availability and role rules.
+
+## Booking rules
+
+A booking runs from a chosen start time to a chosen end time, picked in steps of 30 minutes. There
+is no separate "whole day" mode — a full day is simply a booking that spans it.
+
+| Role | Sees | May change or cancel | Change window |
+| --- | --- | --- | --- |
+| Student | own bookings | own bookings | until 30 minutes before the start |
+| Teacher | all bookings | own bookings | until 30 minutes before the start |
+| Admin | all bookings | all bookings | until the booking starts |
+
+These rules are evaluated by the API only. The frontend never re-implements them: every booking it
+receives carries `can_modify` and, when a change is blocked, a `lock_hint` explaining why — that is
+what the interface renders. Role permissions live in
+[`backend/app/strategies/role_strategy.py`](backend/app/strategies/role_strategy.py) (Strategy
+pattern), the change window in
+[`backend/app/routers/bookings.py`](backend/app/routers/bookings.py).
+
+### Known limitations
+
+- **Overlap is enforced in the service layer, not by a database constraint.** Every create and
+  update checks for conflicts (`existing.start_at < new.end_at AND existing.end_at > new.start_at`,
+  over `active` bookings only) and rejects them with HTTP 409. The `bookings` table itself has no
+  `EXCLUDE` constraint, so two requests arriving at the very same moment could in theory both pass
+  the check. For the scope of this project that is an accepted trade-off; a PostgreSQL
+  `EXCLUDE USING gist` constraint over `(space_id, tstzrange(start_at, end_at))` would be the fix
+  if real concurrency mattered.
+- There are no configurable opening hours and no maximum booking length: any time window in the
+  future is accepted.
 
 ## Architecture
 

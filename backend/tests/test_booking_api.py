@@ -385,19 +385,9 @@ def test_cancel_booking_not_found(db_session, auth_as, seeded_data):
 
 
 
-def test_teacher_can_cancell_other_users_booking(db_session, auth_as, seeded_data):
-
-    start = (datetime.now() + timedelta(days=60)).replace(minute=0, second=0, microsecond=0)
-    booking = Booking(
-        user_id = seeded_data["user_id"],
-        space_id = seeded_data["space_id"],
-        start_at = start,
-        end_at = start + timedelta(hours=1),
-        status = "active"
-    )
-
+def _make_teacher(db_session) -> User:
     teacher_role = Role(name="Teacher")
-    db_session.add_all([booking, teacher_role])
+    db_session.add(teacher_role)
     db_session.flush()
 
     teacher = User(
@@ -408,12 +398,41 @@ def test_teacher_can_cancell_other_users_booking(db_session, auth_as, seeded_dat
     )
     db_session.add(teacher)
     db_session.flush()
-    
+
+    return teacher
+
+
+def test_teacher_cannot_cancel_other_users_booking(db_session, auth_as, seeded_data):
+    """Only the owner or an admin may change a booking - a teacher just gets to see it"""
+
+    start = (datetime.now() + timedelta(days=60)).replace(minute=0, second=0, microsecond=0)
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], start, start + timedelta(hours=1))
+
+    teacher = _make_teacher(db_session)
+
     client = auth_as(teacher)
     response = client.delete(f"/bookings/{booking.id}")
 
+    assert response.status_code == 403
+    assert db_session.get(Booking, booking.id).status == "active"
+
+
+def test_teacher_sees_all_bookings_but_cannot_modify_them(db_session, auth_as, seeded_data):
+
+    start = (datetime.now() + timedelta(days=60)).replace(minute=0, second=0, microsecond=0)
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], start, start + timedelta(hours=1))
+
+    teacher = _make_teacher(db_session)
+
+    client = auth_as(teacher)
+    response = client.get("/bookings/")
+
     assert response.status_code == 200
-    assert response.json()["status"] == "cancelled"
+
+    listed = {item["id"]: item for item in response.json()}
+    assert booking.id in listed
+    assert listed[booking.id]["can_modify"] is False
+    assert "owner" in listed[booking.id]["lock_hint"]
 
 def test_admin_can_cancel_booking_inside_30_min_window(db_session, auth_as, seeded_data, admin_user):
     soon = datetime.now(timezone.utc) + timedelta(minutes=10)
@@ -423,3 +442,77 @@ def test_admin_can_cancel_booking_inside_30_min_window(db_session, auth_as, seed
     response = client.delete(f"/bookings/{booking.id}")
 
     assert response.status_code == 200
+
+"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ROLE_RULES_EXPOSED_TO_THE_UI~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+
+
+def test_own_booking_outside_window_is_modifiable(db_session, auth_as, seeded_data):
+
+    start, end = far_future()
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], start, end)
+
+    client = auth_as(db_session.get(User, seeded_data["user_id"]))
+    response = client.get("/bookings/")
+
+    assert response.status_code == 200
+
+    listed = next(item for item in response.json() if item["id"] == booking.id)
+    assert listed["can_modify"] is True
+    assert listed["lock_hint"] is None
+
+
+def test_own_booking_inside_30_min_window_is_locked_with_reason(db_session, auth_as, seeded_data):
+
+    soon = datetime.now(timezone.utc) + timedelta(minutes=10)
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], soon, soon + timedelta(hours=1))
+
+    client = auth_as(db_session.get(User, seeded_data["user_id"]))
+    response = client.get("/bookings/")
+
+    assert response.status_code == 200
+
+    listed = next(item for item in response.json() if item["id"] == booking.id)
+    assert listed["can_modify"] is False
+    assert "30 minutes" in listed["lock_hint"]
+
+
+def test_admin_is_not_locked_inside_30_min_window(db_session, auth_as, seeded_data, admin_user):
+
+    soon = datetime.now(timezone.utc) + timedelta(minutes=10)
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], soon, soon + timedelta(hours=1))
+
+    client = auth_as(admin_user)
+    response = client.get("/bookings/")
+
+    assert response.status_code == 200
+
+    listed = next(item for item in response.json() if item["id"] == booking.id)
+    assert listed["can_modify"] is True
+    assert listed["lock_hint"] is None
+
+
+def test_cancelled_booking_is_not_modifiable(db_session, auth_as, seeded_data):
+
+    start, end = far_future()
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], start, end, status="cancelled")
+
+    client = auth_as(db_session.get(User, seeded_data["user_id"]))
+    response = client.get("/bookings/")
+
+    assert response.status_code == 200
+
+    listed = next(item for item in response.json() if item["id"] == booking.id)
+    assert listed["can_modify"] is False
+
+
+def test_admin_cannot_change_already_started_booking(db_session, auth_as, seeded_data, admin_user):
+    """Admin has no waiting period, but a booking that already started is still closed"""
+
+    started = datetime.now(timezone.utc) - timedelta(minutes=5)
+    booking = insert_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], started, started + timedelta(hours=1))
+
+    client = auth_as(admin_user)
+    response = client.delete(f"/bookings/{booking.id}")
+
+    assert response.status_code == 409
+    assert "already started" in response.json()["detail"]

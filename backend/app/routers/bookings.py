@@ -8,7 +8,14 @@ from app. models import User, Space, Booking
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.services.booking_service import BookingOverlapError, validate_booking_time
+from app.services.booking_service import (
+    BookingInPastError,
+    BookingOverlapError,
+    SpaceInactiveError,
+    SpaceNotFoundError,
+    create_booking as create_booking_service,
+    validate_booking_time,
+)
 from app.strategies.role_strategy import get_strategy
 
 from typing import Annotated
@@ -92,44 +99,23 @@ def _with_permissions(booking: Booking, current_user) -> Booking:
 def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]):
 
 
-    # get space + validate in case data integrity
-    space = db.get(Space, booking_data.space_id)
-
-    if not space:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Space does not exist")
-
-    if not space.is_active:
-        raise HTTPException(status_code= status.HTTP_409_CONFLICT, detail="Space is not active")
-
-
-    # booking in the past is impossible -> check BEFORE overlap validation
-    if booking_data.start_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Start time can not be earlier than {datetime.now(timezone.utc).strftime('%H:%M:%S %d-%m-%Y')}")
-
-
-    # validate data -> create booking with following data -> add it to db -> return booking
+    # all business rules live in booking service (see sequence diagram)
     try:
-        validate_booking_time(
+        booking = create_booking_service(
             db = db,
+            user_id = current_user.id,
             space_id = booking_data.space_id,
             start_at = booking_data.start_at,
             end_at = booking_data.end_at
         )
+    except SpaceNotFoundError as err:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err))
+    except SpaceInactiveError as err:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
+    except BookingInPastError as err:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     except BookingOverlapError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
-
-        
-    booking = Booking(
-        user_id = current_user.id,
-        space_id = booking_data.space_id,
-        start_at = booking_data.start_at,
-        end_at = booking_data.end_at,
-        status = "active"
-    )
-
-    db.add(booking)
-    db.commit()
-    db.refresh(booking)
 
     return _with_permissions(booking, current_user)
 

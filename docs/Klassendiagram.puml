@@ -1,0 +1,88 @@
+@startuml Klassendiagram
+' DeskIn Sync - klassendiagram (Pydantic-schema's + Strategy Pattern voor rollen)
+' Bron van waarheid: backend/app/schemas/ en backend/app/strategies/role_strategy.py
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+skinparam roundCorner 12
+hide circle
+
+package "User & Auth Schemas" {
+  class UserRegister <<Pydantic>> {
+    +name: str
+    +email: EmailStr
+    +password: str
+  }
+  class RegisteredUser <<Pydantic>> {
+    +id: int
+    +name: str
+    +email: EmailStr
+    +role: str
+  }
+  class Token <<Pydantic>> {
+    +access_token: str
+    +token_type: str
+  }
+}
+
+package "Booking Schemas" {
+  class BookingBase <<Pydantic>> {
+    +space_id: int
+    +start_at: datetime
+    +end_at: datetime
+    +ensure_timezone()
+    +check_time_range()
+  }
+  class BookingCreate <<Pydantic>>
+  class BookingUpdate <<Pydantic>>
+  class BookingRead <<Pydantic>> {
+    +id: int
+    +user_id: int
+    +status: str
+    +created_at: datetime
+    +space_name: str
+    +user_name: str
+    +can_modify: bool
+    +lock_hint: str | None
+  }
+  BookingBase <|-- BookingCreate
+  BookingBase <|-- BookingUpdate
+  BookingBase <|-- BookingRead
+}
+
+package "Space Schemas" {
+  class SpaceAvailabilityRead <<Pydantic>> {
+    +id: int
+    +name: str
+    +capacity: int
+    +category: str
+    +facilities: list<str>
+    +is_available: bool
+    +available_from: datetime | None
+  }
+  class SpaceBookingSlot <<Pydantic>> {
+    +start_at: datetime
+    +end_at: datetime
+  }
+}
+
+package "Role Strategies" {
+  abstract class RoleStrategy <<abstract>> {
+    +min_mins_before_change: int
+    +{abstract} can_view_all(): bool
+    +{abstract} can_manage_booking(booking, user): bool
+  }
+  class StudentStrategy {
+    +min_mins_before_change = 30
+  }
+  class TeacherStrategy {
+    +min_mins_before_change = 30
+  }
+  class AdminStrategy {
+    +min_mins_before_change = 0
+  }
+  RoleStrategy <|-- StudentStrategy
+  RoleStrategy <|-- TeacherStrategy
+  RoleStrategy <|-- AdminStrategy
+}
+@enduml

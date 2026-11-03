@@ -20,5 +20,4 @@ frontend/dist/
 .DS_Store
 
 *.pdf
-docs/Testplan.*
-docs/Testrapport.*
+*.docx

@@ -41,13 +41,12 @@ def auth_as(db_session, client):
 
 @pytest.fixture
 def other_user(db_session, seeded_data):
-    
-    role = db_session.get(Role, db_session.query(User).get(seeded_data["user_id"]).role_id)
+    owner = db_session.get(User, seeded_data["user_id"])
     user = User(
         name="Other User",
         email="other@test.nl",
         password_hash="some-salted-hash",
-        role_id=role.id
+        role_id=owner.role_id
     )
 
     db_session.add(user)

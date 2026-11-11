@@ -1,20 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-
 from sqlalchemy.orm import Session, joinedload
-
-from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
-
-from app. models import User, Space, Booking
 
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.models import Booking, User
+from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 from app.services.booking_service import (
+    BookingAccessDeniedError,
     BookingInPastError,
+    BookingLockedError,
+    BookingNotActiveError,
+    BookingNotFoundError,
     BookingOverlapError,
     SpaceInactiveError,
     SpaceNotFoundError,
+    cancel_booking as cancel_booking_service,
+    change_block_reason,
     create_booking as create_booking_service,
-    validate_booking_time,
+    update_booking as update_booking_service,
 )
 from app.strategies.role_strategy import get_strategy
 
@@ -28,8 +31,25 @@ router = APIRouter(
 
 
 
-"""______________________________________INCAPSULATED_FUNCS______________________________________"""
+"""______________________________________INCAPSULATED_FUNCS____________________________________________________________________________"""
+# All business rules live in booking service
+# router only translate service errors into HTTP codes
 
+_ERROR_STATUS = {
+    BookingNotFoundError: status.HTTP_404_NOT_FOUND,
+    SpaceNotFoundError: status.HTTP_404_NOT_FOUND,
+    BookingAccessDeniedError: status.HTTP_403_FORBIDDEN,
+    BookingInPastError: status.HTTP_400_BAD_REQUEST,
+    SpaceInactiveError: status.HTTP_409_CONFLICT,
+    BookingOverlapError: status.HTTP_409_CONFLICT,
+    BookingNotActiveError: status.HTTP_409_CONFLICT,
+    BookingLockedError: status.HTTP_409_CONFLICT,
+}
+_BOOKING_ERRORS = tuple(_ERROR_STATUS)
+
+
+def _as_utc(value: datetime) -> datetime:
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
 
 
 # fetched Booking by ID and verified booking-to-user belongings
@@ -44,33 +64,8 @@ def _get_owned_booking(db: Session, booking_id: int, current_user) -> Booking:
     return booking
 
 
-def _as_utc(value: datetime) -> datetime:
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
-
-
-# The change window itself: how long before start_at a role may still act.
-# This is the ONLY place the rule is evaluated - the API enforces it and the
-# frontend reads the outcome via `can_modify` / `lock_hint`, so it is never
-# re-implemented in the interface
-def _window_block_reason(booking: Booking, current_user) -> str | None:
-    min_minutes = get_strategy(current_user).min_mins_before_change
-    time_left = _as_utc(booking.start_at) - datetime.now(timezone.utc)
-
-    if time_left >= timedelta(minutes=min_minutes):
-        return None
-
-    if min_minutes == 0:
-        return "Booking has already started and can no longer be changed or cancelled"
-
-    return f"Booking can only be changed or cancelled at least {min_minutes} minutes before start"
-
-
-# Change allowed ONLY inside the window of the user's role
-def _editable_window(booking: Booking, current_user):
-    reason = _window_block_reason(booking, current_user)
-
-    if reason:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=reason)
+def _to_http(err: Exception) -> HTTPException:
+    return HTTPException(_ERROR_STATUS[type(err)], str(err))
 
 
 # Attaches the verdict of the role rules to the booking, so the UI only has to
@@ -83,7 +78,7 @@ def _with_permissions(booking: Booking, current_user) -> Booking:
         booking.can_modify = False
         booking.lock_hint = "Only the owner of this booking or an admin can change it"
     else:
-        reason = _window_block_reason(booking, current_user)
+        reason = change_block_reason(booking, current_user)
         booking.can_modify = reason is None
         booking.lock_hint = reason
 
@@ -92,7 +87,7 @@ def _with_permissions(booking: Booking, current_user) -> Booking:
 
 
 
-"""------------------------------------------ENDPOINTS------------------------------------------"""
+"""------------------------------------------ENDPOINTS------------------------------------------------------------------------------------"""
 
 # POST: Create Booking
 @router.post("/", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
@@ -108,14 +103,9 @@ def create_booking(booking_data: BookingCreate, db: Annotated[Session, Depends(g
             start_at = booking_data.start_at,
             end_at = booking_data.end_at
         )
-    except SpaceNotFoundError as err:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err))
-    except SpaceInactiveError as err:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
-    except BookingInPastError as err:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
-    except BookingOverlapError as err:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
+    
+    except _BOOKING_ERRORS as err:
+        raise _to_http(err) from err
 
     return _with_permissions(booking, current_user)
 
@@ -142,69 +132,20 @@ def list_bookings(db: Annotated[Session, Depends(get_db)],current_user: Annotate
 @router.put("/{booking_id}", response_model=BookingRead)
 def update_booking(booking_id: int, payload: BookingUpdate, db: Annotated[Session, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]):
 
-
-    # get booking + validation
-    booking = _get_owned_booking(db, booking_id, current_user)
-
-    if booking.status != "active":
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Only active bookings can be modified")
-    
-    _editable_window(booking, current_user)
-
-    if payload.start_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Start time can not be in the past")
-
-
-    # get space + validation
-    space = db.get(Space, payload.space_id)
-
-    if not space:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Space does not exists")
-    if not space.is_active:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Space is not active")
-
-    
-    # data validation
     try:
-        validate_booking_time(
-            db = db,
-            space_id= payload.space_id,
-            start_at= payload.start_at,
-            end_at= payload.end_at,
-            exclude_booking_id = booking.id
-        )
-    except BookingOverlapError as err:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err))
-
-    # data modifying
-    booking.space_id = payload.space_id
-    booking.start_at = payload.start_at
-    booking.end_at = payload.end_at
-
-    db.commit()
-    db.refresh(booking)
+        booking = update_booking_service(db, booking_id, current_user, payload.space_id, payload.start_at, payload.end_at)
+    except _BOOKING_ERRORS as err:
+        raise _to_http(err) from err
 
     return _with_permissions(booking, current_user)
-
 
 # DELETE: Cancel Booking
 @router.delete("/{booking_id}", response_model=BookingRead)
 def cancel_booking( booking_id: int, db: Annotated[Session, Depends(get_db)], current_user: Annotated[User, Depends(get_current_user)]):
 
-
-    booking = _get_owned_booking(db, booking_id, current_user)
-
-
-    if booking.status != "active":
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Current booking is already cancelled")
-
-    _editable_window(booking, current_user)
-
-
-    booking.status = "cancelled"
-
-
-    db.commit()
-    db.refresh(booking)
+    try:
+        booking = cancel_booking_service(db, booking_id, current_user)
+    except _BOOKING_ERRORS as err:
+        raise _to_http(err) from err
 
     return _with_permissions(booking, current_user)

@@ -1,13 +1,19 @@
 import pytest
 
-from app.models import Booking, Space
+from app.models import Booking, Space, User, Role
 
 from app.services.booking_service import (
+    BookingAccessDeniedError,
     BookingInPastError,
+    BookingLockedError,
+    BookingNotActiveError,
+    BookingNotFoundError,
     BookingOverlapError,
     SpaceInactiveError,
     SpaceNotFoundError,
+    cancel_booking as cancel_booking_service,
     create_booking as create_booking_service,
+    update_booking as update_booking_service,
     validate_booking_time,
 )
 
@@ -39,6 +45,8 @@ def create_booking(
 
     db_session.add(booking)
     db_session.flush()
+
+    return booking
 
 
 """------------------------------TESTS------------------------------"""
@@ -143,3 +151,68 @@ def test_service_rejects_overlap(db_session, seeded_data):
 
     with pytest.raises(BookingOverlapError):
         create_booking_service(db_session, seeded_data["user_id"], seeded_data["space_id"], date_time(10), date_time(12))
+
+
+
+"""------------------------------UPDATE / CANCEL BOOKING (service layer)------------------------------"""
+
+def _owner(db_session, seeded_data) -> User:
+    return db_session.get(User, seeded_data["user_id"])
+
+
+def _stranger(db_session, seeded_data) -> User:
+    user = User(
+        name="Stranger",
+        email="stranger@test.nl",
+        password_hash="some-salted-hash",
+        role_id=_owner(db_session, seeded_data).role_id
+    )
+    db_session.add(user)
+    db_session.flush()
+    return user
+
+
+def test_service_updates_booking(db_session, seeded_data):
+    booking = create_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], 9, 10)
+
+    updated = update_booking_service(db_session, booking.id, _owner(db_session, seeded_data), seeded_data["space_id"], date_time(13), date_time(14))
+
+    assert updated.start_at == date_time(13)
+    assert updated.end_at == date_time(14)
+
+
+def test_service_update_rejects_unknown_booking(db_session, seeded_data):
+    with pytest.raises(BookingNotFoundError):
+        update_booking_service(db_session, 999999, _owner(db_session, seeded_data), seeded_data["space_id"], date_time(13), date_time(14))
+
+
+def test_service_update_rejects_other_users_booking(db_session, seeded_data):
+    booking = create_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], 9, 10)
+
+    with pytest.raises(BookingAccessDeniedError):
+        update_booking_service(db_session, booking.id, _stranger(db_session, seeded_data), seeded_data["space_id"], date_time(13), date_time(14))
+
+
+def test_service_cancels_booking(db_session, seeded_data):
+    booking = create_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], 9, 10)
+
+    cancelled = cancel_booking_service(db_session, booking.id, _owner(db_session, seeded_data))
+
+    assert cancelled.status == "cancelled"
+
+
+def test_service_cancel_rejects_already_cancelled(db_session, seeded_data):
+    booking = create_booking(db_session, seeded_data["user_id"], seeded_data["space_id"], 9, 10, status="cancelled")
+
+    with pytest.raises(BookingNotActiveError):
+        cancel_booking_service(db_session, booking.id, _owner(db_session, seeded_data))
+
+
+def test_service_cancel_rejects_inside_30_min_window(db_session, seeded_data):
+    soon = datetime.now(timezone.utc) + timedelta(minutes=10)
+    booking = Booking(user_id=seeded_data["user_id"], space_id=seeded_data["space_id"], start_at=soon, end_at=soon + timedelta(hours=1), status="active")
+    db_session.add(booking)
+    db_session.flush()
+
+    with pytest.raises(BookingLockedError):
+        cancel_booking_service(db_session, booking.id, _owner(db_session, seeded_data))

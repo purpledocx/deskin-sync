@@ -1,7 +1,14 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.models import Booking, Space
-from datetime import datetime, timezone
+from app.strategies.role_strategy import get_strategy
+
+from datetime import datetime, timezone, timedelta
+
+
+"""------------------------------------------ERRORS------------------------------------------------------------------------------------"""
+# Server raises these, routers translates them into HTTP codes
 
 
 class BookingOverlapError(ValueError):
@@ -19,6 +26,50 @@ class SpaceInactiveError(ValueError):
 class BookingInPastError(ValueError):
     """Requested start time lies in the past"""
 
+
+class BookingNotActiveError(ValueError):
+    """Booking is cancelled and can no longer be changed"""
+
+
+class BookingLockedError(ValueError):
+    """Booking is inside the change window of the user's role"""
+
+class BookingNotFoundError(LookupError):
+    """Requested booking does not exist"""
+
+
+class BookingAccessDeniedError(LookupError):
+    """Requested booking does not exist"""
+
+
+
+"""------------------------------------------RULES------------------------------------------------------------------------------------"""
+
+
+def _as_utc(val: datetime) -> datetime:
+    return val.replace(tzinfo=timezone.utc) if val.tzinfo is None else val
+
+def _ensure_changable(booking: Booking, user, not_active_mesg: str) -> None:
+    if booking.status != "active":
+        raise BookingNotActiveError(not_active_mesg)
+    
+    reason = change_block_reason(booking, user)
+    if reason:
+        raise BookingLockedError(reason)
+
+
+def change_block_reason(booking: Booking, user) -> str | None:
+
+    min_minutes = get_strategy(user).min_mins_before_change
+    time_left = _as_utc(booking.start_at) - datetime.now(timezone.utc)
+
+    if time_left >= timedelta(minutes=min_minutes):
+        return None
+    
+    if min_minutes == 0:
+        return "Booking has already started and can no longer be changed or cancelled"
+
+    return f"Booking can only be changed or cancelled at least {min_minutes} minutes before start"
 
 def validate_booking_time(
     db: Session,
@@ -39,16 +90,12 @@ def validate_booking_time(
             Booking.status == "active",
             Booking.start_at < end_at,
             Booking.end_at > start_at,
-            Booking.id != exclude_booking_id # added cuz found a bug 409 status_code when was coding api_update tests
+            Booking.id != exclude_booking_id #  a booking must not conflict with itself on update
         )
     )
 
-    existing_booking_id = db.scalar(statement)
-
-    if existing_booking_id is not None:
-        raise BookingOverlapError(
-            "This space is already booked for the selected time"
-        )
+    if db.scalar(statement) is not None:
+        raise BookingOverlapError("This space is already booked for selected time. Try to book it different timeframe")
 
 
 def get_bookable_space(db: Session, space_id: int) -> Space:
@@ -64,15 +111,24 @@ def get_bookable_space(db: Session, space_id: int) -> Space:
     return space
 
 
-def create_booking(
-    db: Session,
-    user_id: int,
-    space_id: int,
-    start_at: datetime,
-    end_at: datetime
-) -> Booking:
-    """Create an active booking (sequence diagram: steps 6-23).
-    The router only translates the errors raised here into HTTP status codes"""
+def get_managable_booking(db: Session, booking_id: int, user) -> Booking:
+    """ fetch a booking and make sure users role can manage it """
+
+    booking = db.get(Booking, booking_id)
+
+    if booking is None:
+        raise BookingNotFoundError("Booking not found")
+    if not get_strategy(user).can_manage_booking(booking, user):
+        raise BookingAccessDeniedError("You have no access to following booking")
+
+    return booking
+
+"""------------------------------------------USE CASES------------------------------------------------------------------------------------"""
+
+
+def create_booking(db: Session, user_id: int, space_id: int, start_at: datetime, end_at: datetime) -> Booking:
+
+    """Create an active booking, this router only translates the errors raised here into HTTP status codes"""
 
     get_bookable_space(db, space_id)
 
@@ -92,6 +148,42 @@ def create_booking(
     )
 
     db.add(booking)
+    db.commit()
+    db.refresh(booking)
+
+    return booking
+
+
+def update_booking(db: Session, booking_id: int, user, space_id: int, start_at: datetime, end_at: datetime) -> Booking:
+    
+    """Move an active booking to another space / time"""
+
+    booking = get_managable_booking(db, booking_id, user)
+    _ensure_changable(booking, user, "Only active bookings can be modified")
+
+    if start_at <= datetime.now(timezone.utc):
+        raise BookingInPastError("Start time can not be in the past")
+
+    get_bookable_space(db, space_id)
+    validate_booking_time(db, space_id, start_at, end_at, booking.id)
+
+    booking.space_id = space_id
+    booking.start_at = start_at
+    booking.end_at = end_at
+
+    db.commit()
+    db.refresh(booking)
+
+    return booking
+
+
+def cancel_booking(db: Session, booking_id: int, user) -> Booking:
+    
+    booking = get_managable_booking(db, booking_id, user)
+    _ensure_changable(booking, user, "Current booking is already cancelled")
+
+    booking.status = "cancelled"
+
     db.commit()
     db.refresh(booking)
 

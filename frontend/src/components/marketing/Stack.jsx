@@ -12,8 +12,32 @@ const stack = [
     logo: "/postgresql-original.svg",
   },
   {
+    name: "SQLAlchemy",
+    logo: "/sqlalchemy-original.svg",
+  },
+  {
     name: "JWT auth",
     logo: "/jwt-icon.svg",
+  },
+  {
+    name: "Tailwind CSS",
+    logo: "/tailwindcss-original.svg",
+  },
+  {
+    name: "Vite",
+    logo: "/vitejs-original.svg",
+  },
+  {
+    name: "Pytest",
+    logo: "/pytest-original.svg",
+  },
+  {
+    name: "GitLab CI",
+    logo: "/gitlab-original.svg",
+  },
+  {
+    name: "GitHub Actions",
+    logo: "/github-original.svg",
   },
 ];
 

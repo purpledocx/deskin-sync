@@ -5,30 +5,32 @@
 **Book desks and rooms for any time window.**
 A full-stack booking app for students, teachers and admins — live availability, overlap-free bookings and role-based rules.
 
-[![CI](https://github.com/purpledocx/deskin-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/purpledocx/deskin-sync/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-69%20passed-2EA44F?style=flat-square&logo=pytest&logoColor=white)
-![ESLint](https://img.shields.io/badge/ESLint-0%20errors-4B32C3?style=flat-square&logo=eslint&logoColor=white)
-![Code style](https://img.shields.io/badge/code%20style-PEP%208-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?style=for-the-badge&logo=fastapi&logoColor=009688&labelColor=F6F8FA)
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=for-the-badge&logo=python&logoColor=3776AB&labelColor=F6F8FA)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-psycopg%203-4169E1?style=for-the-badge&logo=postgresql&logoColor=4169E1&labelColor=F6F8FA)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=D71F00&labelColor=F6F8FA)
+![Alembic](https://img.shields.io/badge/Alembic-migrations-6BA81E?style=for-the-badge&logo=alembic&logoColor=6BA81E&labelColor=F6F8FA)
+![Pydantic](https://img.shields.io/badge/Pydantic-2-E92063?style=for-the-badge&logo=pydantic&logoColor=E92063&labelColor=F6F8FA)
+![JWT](https://img.shields.io/badge/Auth-JWT%20%28HS256%29-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=000000&labelColor=F6F8FA)
+![bcrypt](https://img.shields.io/badge/Passwords-bcrypt-003A70?style=for-the-badge&logo=letsencrypt&logoColor=2C5BB4&labelColor=F6F8FA)
 
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-![React Router](https://img.shields.io/badge/React%20Router-7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
-![Prettier](https://img.shields.io/badge/Prettier-3-F7B93E?style=flat-square&logo=prettier&logoColor=black)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=087EA4&labelColor=F6F8FA)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=646CFF&labelColor=F6F8FA)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=06B6D4&labelColor=F6F8FA)
+![React Router](https://img.shields.io/badge/React%20Router-7-CA4245?style=for-the-badge&logo=reactrouter&logoColor=CA4245&labelColor=F6F8FA)
+![Prettier](https://img.shields.io/badge/Prettier-3-F7B93E?style=for-the-badge&logo=prettier&logoColor=D99100&labelColor=F6F8FA)
 
-![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?style=flat-square&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=flat-square&logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-psycopg%203-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white)
-![Alembic](https://img.shields.io/badge/Alembic-migrations-6BA81E?style=flat-square)
-![Pydantic](https://img.shields.io/badge/Pydantic-2-E92063?style=flat-square&logo=pydantic&logoColor=white)
-![JWT](https://img.shields.io/badge/Auth-JWT%20%28HS256%29-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
-![bcrypt](https://img.shields.io/badge/Passwords-bcrypt-003A70?style=flat-square)
+[![CI](https://img.shields.io/github/actions/workflow/status/purpledocx/deskin-sync/ci.yml?style=for-the-badge&logo=githubactions&logoColor=2088FF&label=CI&labelColor=F6F8FA)](https://github.com/purpledocx/deskin-sync/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-69%20passed-2EA44F?style=for-the-badge&logo=pytest&logoColor=0A9EDC&labelColor=F6F8FA)
+![ESLint](https://img.shields.io/badge/ESLint-0%20errors-4B32C3?style=for-the-badge&logo=eslint&logoColor=4B32C3&labelColor=F6F8FA)
+![Code style](https://img.shields.io/badge/code%20style-PEP%208-3776AB?style=for-the-badge&logo=python&logoColor=3776AB&labelColor=F6F8FA)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=for-the-badge&logo=githubactions&logoColor=2088FF&labelColor=F6F8FA)
+![GitLab CI](https://img.shields.io/badge/GitLab%20CI-pipeline-FC6D26?style=for-the-badge&logo=gitlab&logoColor=FC6D26&labelColor=F6F8FA)
 
-![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)
-![GitLab CI](https://img.shields.io/badge/GitLab%20CI-pipeline-FC6D26?style=flat-square&logo=gitlab&logoColor=white)
-![Design pattern](https://img.shields.io/badge/pattern-Strategy-12305A?style=flat-square)
-![Planning](https://img.shields.io/badge/planning-Scrum%20%2B%20MoSCoW-0052CC?style=flat-square)
+![Design pattern](https://img.shields.io/badge/pattern-Strategy-12305A?style=for-the-badge&logo=diagramsdotnet&logoColor=F08705&labelColor=F6F8FA)
+![Planning](https://img.shields.io/badge/planning-Scrum%20%2B%20MoSCoW-0052CC?style=for-the-badge&logo=jira&logoColor=2684FF&labelColor=F6F8FA)
+
+[Features](#key-features) · [Quick start](#quick-start) · [Architecture](#architecture) · [Testing & CI](#testing--ci) · [Design docs](#design-docs)
 
 [Features](#key-features) · [Quick start](#quick-start) · [Architecture](#architecture) · [Testing & CI](#testing--ci) · [Design docs](#design-docs)
 

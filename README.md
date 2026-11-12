@@ -5,14 +5,32 @@
 **Book desks and rooms for any time window.**
 A full-stack booking app for students, teachers and admins — live availability, overlap-free bookings and role-based rules.
 
+[![CI](https://github.com/purpledocx/deskin-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/purpledocx/deskin-sync/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-69%20passed-2EA44F?style=flat-square&logo=pytest&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-0%20errors-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+![Code style](https://img.shields.io/badge/code%20style-PEP%208-3776AB?style=flat-square&logo=python&logoColor=white)
+
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![React Router](https://img.shields.io/badge/React%20Router-7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![Prettier](https://img.shields.io/badge/Prettier-3-F7B93E?style=flat-square&logo=prettier&logoColor=black)
+
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=flat-square&logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-psycopg%203-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white)
+![Alembic](https://img.shields.io/badge/Alembic-migrations-6BA81E?style=flat-square)
+![Pydantic](https://img.shields.io/badge/Pydantic-2-E92063?style=flat-square&logo=pydantic&logoColor=white)
 ![JWT](https://img.shields.io/badge/Auth-JWT%20%28HS256%29-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
-![pytest](https://img.shields.io/badge/Tests-pytest%209-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
+![bcrypt](https://img.shields.io/badge/Passwords-bcrypt-003A70?style=flat-square)
+
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)
+![GitLab CI](https://img.shields.io/badge/GitLab%20CI-pipeline-FC6D26?style=flat-square&logo=gitlab&logoColor=white)
+![Design pattern](https://img.shields.io/badge/pattern-Strategy-12305A?style=flat-square)
+![Planning](https://img.shields.io/badge/planning-Scrum%20%2B%20MoSCoW-0052CC?style=flat-square)
+
+[Features](#key-features) · [Quick start](#quick-start) · [Architecture](#architecture) · [Testing & CI](#testing--ci) · [Design docs](#design-docs)
 
 [Backend README](backend/README.md) · [Frontend README](frontend/README.md) · [Definition of Done](DoD.md)
 
@@ -28,8 +46,8 @@ DeskIn Sync lets users find a free desk, focus booth, meeting room or training r
 
 | Component | Stack | Description |
 | --- | --- | --- |
-| [`backend/`](backend/README.md) | FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL · JWT | REST API with authentication, availability search and booking rules |
-| [`frontend/`](frontend/README.md) | React 19 · Vite 8 · React Router 7 · Tailwind CSS 4 | Single-page app with landing page, sign in / sign up, dashboard and bookings overview |
+| [`backend/`](backend/README.md) | FastAPI · Pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL · JWT + bcrypt | REST API with authentication, availability search and booking rules |
+| [`frontend/`](frontend/README.md) | React 19 · Vite 8 · React Router 7 · Tailwind CSS 4 · ESLint | Single-page app with landing page, sign in / sign up, dashboard and bookings overview |
 
 ## Key features
 
@@ -38,7 +56,9 @@ DeskIn Sync lets users find a free desk, focus booth, meeting room or training r
 - **Edit and cancel** — reschedule or cancel bookings; cancelled bookings stay in the history.
 - **Roles** — *Student*, *Teacher* and *Admin* with different viewing and editing rights; see [Booking rules](#booking-rules).
 - **JWT authentication** — OAuth2 password flow with bcrypt-hashed passwords.
+- **Service layer** — all booking rules live in one place and are testable without HTTP.
 - **Tested** — 69 pytest tests for authentication, bookings, availability and role rules.
+- **CI** — every push runs pytest against a real PostgreSQL and ESLint on the frontend.
 
 ## Booking rules
 
@@ -56,7 +76,7 @@ receives carries `can_modify` and, when a change is blocked, a `lock_hint` expla
 what the interface renders. Role permissions live in
 [`backend/app/strategies/role_strategy.py`](backend/app/strategies/role_strategy.py) (Strategy
 pattern), the change window in
-[`backend/app/routers/bookings.py`](backend/app/routers/bookings.py).
+[`backend/app/services/booking_service.py`](backend/app/services/booking_service.py).
 
 ### Known limitations
 
@@ -79,13 +99,32 @@ flowchart LR
     BE -- "SQLAlchemy · psycopg" --> DB[(PostgreSQL)]
 ```
 
+Inside the backend a request passes through these layers:
+
+```mermaid
+flowchart LR
+    P[Pydantic schemas<br/>validation] --> R[Router<br/>HTTP in, status code out]
+    R --> S[Service layer<br/>booking rules · overlap check]
+    S --> M[SQLAlchemy models]
+    S -. "may this role do it?" .-> ST[Role strategies<br/>Student · Teacher · Admin]
+```
+
+| Layer | Where | Responsibility |
+| --- | --- | --- |
+| Schemas | [`backend/app/schemas/`](backend/app/schemas) | Validate input and shape responses (Pydantic) |
+| Routers | [`backend/app/routers/`](backend/app/routers) | HTTP only: call the service, map errors to status codes |
+| Services | [`backend/app/services/`](backend/app/services) | Business rules: overlap check, create, update, cancel |
+| Strategies | [`backend/app/strategies/`](backend/app/strategies) | Per-role permissions (Strategy pattern) |
+| Models | [`backend/app/models/`](backend/app/models) | SQLAlchemy tables, migrated with Alembic |
+
 ## Repository structure
 
 ```text
 deskin-sync/
 ├── backend/        # FastAPI app, Alembic migrations, seeder, pytest suite
 ├── frontend/       # React + Vite single-page app
-├── docs/           # ERD, diagrams and screenshots
+├── docs/           # ERD, diagrams, wireframes, screenshots and showcase
+├── .github/        # GitHub Actions workflow (pytest + ESLint)
 ├── DoD.md          # Definition of Done (Dutch)
 └── README.md
 ```
@@ -123,6 +162,35 @@ Full setup, environment variables, API reference and scripts are in the [backend
 ## API documentation
 
 While the backend is running, FastAPI serves interactive docs at [`/docs`](http://127.0.0.1:8000/docs) (Swagger UI) and [`/redoc`](http://127.0.0.1:8000/redoc) (ReDoc).
+
+## Testing & CI
+
+| Check | Command | What it covers |
+| --- | --- | --- |
+| Backend tests | `cd backend && python -m pytest -q` | 69 tests: auth, booking API, booking service, role strategies, availability |
+| Frontend lint | `cd frontend && npm run lint` | ESLint on all React code |
+| Frontend build | `cd frontend && npm run build` | Production build with Vite |
+
+The tests run against a separate database (`deskin_sync_test`) and refuse to start on any other one. The same checks run automatically on every push and pull request in [GitHub Actions](.github/workflows/ci.yml) and [GitLab CI](.gitlab-ci.yml), with a throwaway PostgreSQL service container.
+
+## Design docs
+
+| Document | File |
+| --- | --- |
+| Entity relationship diagram | [`docs/ERD.png`](docs/ERD.png) |
+| Class diagram (schemas + role strategies) | [`docs/Klassendiagram.png`](docs/Klassendiagram.png) · [source](docs/Klassendiagram.puml) |
+| Sequence diagram (overlap prevention) | [`docs/Sequence_diagram.png`](docs/Sequence_diagram.png) |
+| Flowchart / sitemap | [`docs/Flowchart.png`](docs/Flowchart.png) |
+| Wireframes | [`docs/wireframes/`](docs/wireframes) |
+
+<details>
+<summary>Show the ERD and the sequence diagram</summary>
+
+<img src="docs/ERD.png" alt="Entity relationship diagram" width="860">
+
+<img src="docs/Sequence_diagram.png" alt="Sequence diagram of creating a booking with overlap prevention" width="860">
+
+</details>
 
 ## Screenshots
 

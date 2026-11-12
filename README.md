@@ -32,8 +32,6 @@ A full-stack booking app for students, teachers and admins — live availability
 
 [Features](#key-features) · [Quick start](#quick-start) · [Architecture](#architecture) · [Testing & CI](#testing--ci) · [Design docs](#design-docs)
 
-[Features](#key-features) · [Quick start](#quick-start) · [Architecture](#architecture) · [Testing & CI](#testing--ci) · [Design docs](#design-docs)
-
 [Backend README](backend/README.md) · [Frontend README](frontend/README.md) · [Definition of Done](DoD.md)
 
 <img src="docs/showcase.gif" alt="DeskIn Sync showcase: landing page, sign in, availability dashboard, booking and cancelling" width="860">

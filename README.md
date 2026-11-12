@@ -4,6 +4,7 @@
 
 **Book desks and rooms for any time window.**
 A full-stack booking app for students, teachers and admins — live availability, overlap-free bookings and role-based rules.
+
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.141-1D4ED8?style=for-the-badge&logo=fastapi&logoColor=DBEAFE&labelColor=172554)
 ![Python](https://img.shields.io/badge/Python-3.14-1D4ED8?style=for-the-badge&logo=python&logoColor=DBEAFE&labelColor=172554)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-psycopg%203-1D4ED8?style=for-the-badge&logo=postgresql&logoColor=DBEAFE&labelColor=172554)

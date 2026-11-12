@@ -8,7 +8,7 @@ export default function HowItWorks() {
   return (
     <section id="how-it-work" className="bg-white py-20 scroll-mt-20">
       
-      <div className="mx-auto px-6 max-w-6xl">
+      <div className="mx-auto px-6 max-w-7xl">
         
         <h2 className="text-3xl text-navy font-semibold">How it works</h2>
         

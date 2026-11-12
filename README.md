@@ -16,7 +16,7 @@ A full-stack booking app for students, teachers and admins — live availability
 
 [Backend README](backend/README.md) · [Frontend README](frontend/README.md) · [Definition of Done](DoD.md)
 
-<img src="docs/screenshots/frontend/dashboard-availability.png" alt="DeskIn Sync space availability dashboard" width="860">
+<img src="docs/showcase.gif" alt="DeskIn Sync showcase: landing page, sign in, availability dashboard, booking and cancelling" width="860">
 
 </div>
 
@@ -38,7 +38,7 @@ DeskIn Sync lets users find a free desk, focus booth, meeting room or training r
 - **Edit and cancel** — reschedule or cancel bookings; cancelled bookings stay in the history.
 - **Roles** — *Student*, *Teacher* and *Admin* with different viewing and editing rights; see [Booking rules](#booking-rules).
 - **JWT authentication** — OAuth2 password flow with bcrypt-hashed passwords.
-- **Tested** — 49 pytest tests for authentication, bookings, availability and role rules.
+- **Tested** — 69 pytest tests for authentication, bookings, availability and role rules.
 
 ## Booking rules
 

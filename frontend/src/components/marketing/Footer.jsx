@@ -8,7 +8,7 @@ export default function Footer() {
     return(
         <footer className="bg-gray-900 text-gray-300 text-sm">
             
-            <div className="max-w-6xl px-8 py-10 flex flex-wrap justify-between gap-8">
+            <div className="max-w-7xl px-8 py-10 flex flex-wrap justify-between gap-8">
                 
                 <div>
                     <div className="text-white font-semibold mb-2">DeskIn Sync</div>

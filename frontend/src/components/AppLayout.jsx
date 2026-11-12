@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { clearToken } from "../api/client";
 import { getUser } from "../api/session";
 
@@ -22,7 +22,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen flex-col bg-surface">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 px-6">
-          <span className="py-4 text-xl font-semibold text-navy">DeskIn Sync</span>
+          <Link to="/" className="py-4 text-xl font-semibold text-navy">DeskIn Sync</Link>
 
           <nav className="flex gap-8">
             <NavLink to="/app" end className={link}>Spaces</NavLink>

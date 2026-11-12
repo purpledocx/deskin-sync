@@ -1,0 +1,64 @@
+name: CI
+
+# Mirrors .gitlab-ci.yml: runs on every branch push and on pull requests
+# (GitLab: CI_COMMIT_BRANCH + merge_request_event).
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  # Pytest suite for the FastAPI backend. Runs against a throwaway PostgreSQL
+  # service container; the database name must contain "deskin_sync_test",
+  # otherwise tests/conftest.py refuses to start.
+  backend-tests:
+    runs-on: ubuntu-latest
+    container: python:3.14-slim
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: deskin_sync_test
+          POSTGRES_USER: deskin
+          POSTGRES_PASSWORD: deskin
+        options: >-
+          --health-cmd "pg_isready -U deskin -d deskin_sync_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql+psycopg://deskin:deskin@postgres:5432/deskin_sync_test"
+      TEST_DATABASE_URL: "postgresql+psycopg://deskin:deskin@postgres:5432/deskin_sync_test"
+      JWT_SECRET_KEY: "ci-only-secret-never-used-outside-the-pipeline"
+      PIP_CACHE_DIR: ${{ github.workspace }}/.cache/pip
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .cache/pip
+          key: pip-${{ github.ref_name }}
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r requirements.txt
+      - name: Run tests
+        run: python -m pytest -q
+
+  # ESLint for the React frontend, as required by the Definition of Done
+  frontend-lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint

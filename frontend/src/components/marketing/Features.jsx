@@ -16,7 +16,7 @@ const features = [
 export default function Features() {
   return (
 
-    <section id="features" className="max-w-6xl px-6 py-20 mx-auto scroll-mt-20">
+    <section id="features" className="max-w-7xl px-6 py-20 mx-auto scroll-mt-20">
 
       <h2 className="text-3xl text-navy font-semibold">Everything you need to manage spaces</h2>
       

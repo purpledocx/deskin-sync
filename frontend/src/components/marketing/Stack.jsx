@@ -16,7 +16,15 @@ const stack = [
     logo: "/sqlalchemy-original.svg",
   },
   {
-    name: "JWT auth",
+    name: "Alembic",
+    short: "Al",
+  },
+  {
+    name: "Pydantic",
+    logo: "/pydantic-original.svg",
+  },
+  {
+    name: "JWT + bcrypt",
     logo: "/jwt-icon.svg",
   },
   {
@@ -30,6 +38,10 @@ const stack = [
   {
     name: "Pytest",
     logo: "/pytest-original.svg",
+  },
+  {
+    name: "ESLint",
+    logo: "/eslint-original.svg",
   },
   {
     name: "GitLab CI",
@@ -52,11 +64,18 @@ export default function Stack() {
                             key={item.name} 
                             className="flex items-center gap-2 text-sm px-9 py-3 bg-surface rounded border border-line"
                         >
-                            <img 
-                                src={item.logo} 
-                                alt={`${item.name} logo`} 
-                                className="w-15 h-15 object-contain" 
-                            />
+                            {item.logo ? (
+                                <img 
+                                    src={item.logo} 
+                                    alt={`${item.name} logo`} 
+                                    className="w-15 h-15 object-contain" 
+                                />
+                            ) : (
+                                // no logo file in /public yet -> same-size placeholder with initials
+                                <span className="w-15 h-15 flex items-center justify-center rounded border border-line bg-white text-lg font-semibold text-muted">
+                                    {item.short}
+                                </span>
+                            )}
                             <span>{item.name}</span>
                         </div>
                     ))}

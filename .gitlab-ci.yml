@@ -35,17 +35,18 @@ backend-tests:
 frontend-lint:
   stage: test
   image: node:24-alpine
-  variables:
-    npm_config_cache: "$CI_PROJECT_DIR/.cache/npm"
   cache:
-    key: "npm-$CI_COMMIT_REF_SLUG"
+    key: "pnpm-$CI_COMMIT_REF_SLUG"
     paths:
-      - .cache/npm
+      - .cache/pnpm-store
   before_script:
     - cd frontend
-    - npm ci
+    # corepack installs the pnpm version pinned in "packageManager" (package.json)
+    - corepack enable
+    - pnpm config set store-dir "$CI_PROJECT_DIR/.cache/pnpm-store"
+    - pnpm install --frozen-lockfile
   script:
-    - npm run lint
+    - pnpm lint
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH

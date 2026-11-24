@@ -131,7 +131,7 @@ deskin-sync/
 
 ## Quick start
 
-**Prerequisites:** Python 3.14, PostgreSQL, Node.js 20.19+ / 22.13+ / 24+ and npm.
+**Prerequisites:** Python 3.14, PostgreSQL, Node.js 20.19+ / 22.13+ / 24+ and pnpm.
 
 **1. Backend** — API on <http://127.0.0.1:8000>
 
@@ -150,9 +150,9 @@ uvicorn app.main:app --reload
 
 ```bash
 cd frontend
-npm ci
+pnpm install
 echo "VITE_API_URL=http://127.0.0.1:8000" > .env
-npm run dev
+pnpm dev
 ```
 
 With the seeder data you can log in as `student@deskin.test`, `teacher@deskin.test` or `admin@deskin.test` using the `DEMO_PASSWORD` from `backend/.env`.
@@ -168,8 +168,8 @@ While the backend is running, FastAPI serves interactive docs at [`/docs`](http:
 | Check | Command | What it covers |
 | --- | --- | --- |
 | Backend tests | `cd backend && python -m pytest -q` | 69 tests: auth, booking API, booking service, role strategies, availability |
-| Frontend lint | `cd frontend && npm run lint` | ESLint on all React code |
-| Frontend build | `cd frontend && npm run build` | Production build with Vite |
+| Frontend lint | `cd frontend && pnpm lint` | ESLint on all React code |
+| Frontend build | `cd frontend && pnpm build` | Production build with Vite |
 
 The tests run against a separate database (`deskin_sync_test`) and refuse to start on any other one. The same checks run automatically on every push and pull request in [GitHub Actions](.github/workflows/ci.yml) and [GitLab CI](.gitlab-ci.yml), with a throwaway PostgreSQL service container.
 
@@ -221,4 +221,4 @@ More screenshots: [frontend README](frontend/README.md#screenshots).
 
 ## Contributing
 
-Work follows the [Definition of Done](DoD.md): clear acceptance criteria, backend validation, updated pytest tests that all pass, `npm run lint` without errors, a linked GitLab issue and a merge request.
+Work follows the [Definition of Done](DoD.md): clear acceptance criteria, backend validation, updated pytest tests that all pass, `pnpm lint` without errors, a linked GitLab issue and a merge request.

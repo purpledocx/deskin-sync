@@ -8,7 +8,7 @@ User story is voltooid wanneer:
 - Fouten worden duidelijk weergegeven aan de gebruiker.
 - Pytest-tests zijn toegevoegd of bijgewerkt.
 - Alle tests slagen.
-- `npm run lint` loopt zonder fouten.
+- `pnpm lint` loopt zonder fouten.
 - Code is gekoppeld aan GitLab Issue.
 - Een duidelijke commit is gemaakt.
 - Wijziging is doorgegaan via Merge Request.

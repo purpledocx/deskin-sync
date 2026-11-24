@@ -603,7 +603,7 @@ The repository includes a [Definition of Done](../DoD.md) (in Dutch). In short, 
 - it has clear acceptance criteria and is linked to a GitLab issue,
 - input is validated on the backend and errors are shown clearly to the user,
 - pytest tests are added or updated and **all tests pass**,
-- `npm run lint` passes for frontend changes,
+- `pnpm lint` passes for frontend changes,
 - it is committed with a clear message and merged through a merge request, with evidence (screenshot, test log or MR link) saved.
 
 ---

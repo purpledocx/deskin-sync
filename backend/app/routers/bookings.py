@@ -22,7 +22,6 @@ from app.services.booking_service import (
 from app.strategies.role_strategy import get_strategy
 
 from typing import Annotated
-from datetime import datetime, timedelta, timezone
 
 router = APIRouter(
     prefix="/bookings",
@@ -46,22 +45,6 @@ _ERROR_STATUS = {
     BookingLockedError: status.HTTP_409_CONFLICT,
 }
 _BOOKING_ERRORS = tuple(_ERROR_STATUS)
-
-
-def _as_utc(value: datetime) -> datetime:
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
-
-
-# fetched Booking by ID and verified booking-to-user belongings
-def _get_owned_booking(db: Session, booking_id: int, current_user) -> Booking:
-    booking = db.query(Booking).filter(Booking.id == booking_id).first()
-
-    if booking is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    if not get_strategy(current_user).can_manage_booking(booking, current_user):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have no access to following booking")
-
-    return booking
 
 
 def _to_http(err: Exception) -> HTTPException:

@@ -62,7 +62,7 @@ The frontend is a single-page application built with React 19 and Vite. It talks
 
 ## Tech stack
 
-| Concern | Technology (from `package.json` / `package-lock.json`) |
+| Concern | Technology (from `package.json` / `pnpm-lock.yaml`) |
 | --- | --- |
 | UI library | React 19 (`react`, `react-dom`) |
 | Build tool / dev server | Vite 8 with `@vitejs/plugin-react` |
@@ -72,7 +72,7 @@ The frontend is a single-page application built with React 19 and Vite. It talks
 | HTTP | Native `fetch`, wrapped in `src/api/client.js` |
 | State | React component state (`useState` / `useEffect`); no global state library. The session is derived from the JWT in `localStorage`. |
 | Linting / formatting | ESLint 10 (flat config with `eslint-plugin-react-hooks` and `eslint-plugin-react-refresh`), Prettier 3 |
-| Package manager | npm (`package-lock.json`, lockfile v3) |
+| Package manager | pnpm 12 (pinned via `packageManager` in `package.json`, `pnpm-lock.yaml`) |
 | Language | JavaScript (JSX) |
 
 ## Project structure
@@ -129,14 +129,14 @@ Behaviour worth knowing:
 ## Prerequisites
 
 - **Node.js** 20.19+, 22.13+ or 24+ — the range that satisfies every `engines` field in the dependencies (Vite 8 needs `^20.19.0 || >=22.12.0`, ESLint 10 needs `^20.19.0 || ^22.13.0 || >=24`).
-- **npm** (bundled with Node.js).
+- **pnpm** 12 — run `corepack enable` to get the version pinned in `package.json`, or install it separately.
 - A running **[backend API](../backend/README.md)** on port 8000 with a migrated (and preferably seeded) database.
 
 ## Getting started
 
 ```bash
 cd frontend
-npm ci                       # or: npm install
+pnpm install --frozen-lockfile   # or: pnpm install
 ```
 
 Create `frontend/.env` (see [Environment variables](#environment-variables)):
@@ -148,7 +148,7 @@ VITE_API_URL=http://127.0.0.1:8000
 Start the dev server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open <http://localhost:5173>. If you ran the backend seeder, you can log in with `student@deskin.test`, `teacher@deskin.test` or `admin@deskin.test` and the `DEMO_PASSWORD` from `backend/.env`.
@@ -177,11 +177,11 @@ All scripts are defined in `package.json` and run from `frontend/`.
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite dev server with hot module replacement (port 5173). |
-| `npm run build` | Create a production build in `dist/`. |
-| `npm run preview` | Serve the production build locally. Vite uses port 4173 by default, which the backend CORS settings do not allow — use `npm run preview -- --port 5173` to test against the local API. |
-| `npm run lint` | Run ESLint on the project (`dist/` is ignored). Required to pass by the [Definition of Done](../DoD.md). |
-| `npm run format` | Format all files with Prettier (single quotes, semicolons, 2-space indentation). |
+| `pnpm dev` | Start the Vite dev server with hot module replacement (port 5173). |
+| `pnpm build` | Create a production build in `dist/`. |
+| `pnpm preview` | Serve the production build locally. Vite uses port 4173 by default, which the backend CORS settings do not allow — use `pnpm preview --port 5173` to test against the local API. |
+| `pnpm lint` | Run ESLint on the project (`dist/` is ignored). Required to pass by the [Definition of Done](../DoD.md). |
+| `pnpm format` | Format all files with Prettier (single quotes, semicolons, 2-space indentation). |
 
 There is no frontend test runner configured.
 
@@ -303,10 +303,10 @@ The repository includes a [Definition of Done](../DoD.md) (in Dutch). For fronte
 
 - the React interface (and FastAPI endpoint, if needed) is implemented for the task,
 - errors are shown clearly to the user,
-- `npm run lint` runs without errors,
+- `pnpm lint` runs without errors,
 - the change is linked to a GitLab issue, committed with a clear message and merged through a merge request, with evidence (screenshot, test log or MR link) saved.
 
-Run `npm run format` before committing to keep the Prettier style consistent.
+Run `pnpm format` before committing to keep the Prettier style consistent.
 
 ---
 
